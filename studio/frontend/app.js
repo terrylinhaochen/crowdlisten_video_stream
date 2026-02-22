@@ -49,13 +49,12 @@ function toast(msg, type='success') {
 // ── Tabs ──────────────────────────────────────────────────────────
 
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.nav-link').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.tab-page').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`));
   S.tab=name;
   if(name==='queue') renderQueue();
   if(name==='published'){fetchReview();fetchPublished();}
 }
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
 // ── SSE ───────────────────────────────────────────────────────────
 
@@ -133,6 +132,9 @@ function handleClipsBack() {
 
 function goToLanding() {
   S.selected=null; S.filters.query=''; S.clipPickerMode='meme';
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.toggle('active',p.id==='tab-create'));
+  document.querySelectorAll('.nav-link').forEach(t=>t.classList.remove('active'));
+  S.tab='create';
   showOnly('create-landing');
 }
 

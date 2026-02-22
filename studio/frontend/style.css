@@ -38,19 +38,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .logo{font-size:15px;font-weight:700;letter-spacing:-.4px;white-space:nowrap;flex-shrink:0}
 .logo-accent{color:var(--coral)}
 
-.tabs{display:flex;gap:2px;flex:1;justify-content:center}
-.tab{background:none;border:none;color:var(--text2);padding:6px 18px;
-  border-radius:var(--r-s);font-size:13px;font-weight:500;cursor:pointer;
-  transition:all .15s;white-space:nowrap;position:relative}
-.tab:hover{color:var(--text);background:var(--surface2)}
-.tab.active{color:var(--text);background:var(--surface2);font-weight:600}
-
 .tab-badge{background:var(--coral);color:#fff;font-size:10px;font-weight:700;
   min-width:16px;height:16px;border-radius:var(--pill);padding:0 4px;
   display:inline-flex;align-items:center;justify-content:center;margin-left:4px;vertical-align:middle}
 .tab-badge.hidden{display:none}
 
-.header-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0}
+.nav-link{background:none;border:none;color:var(--text2);padding:5px 12px;
+  border-radius:var(--r-s);font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .15s;white-space:nowrap;font-family:inherit}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--text);background:var(--surface2);font-weight:600}
 .upload-status{font-size:12px;color:var(--text2);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ── Main ────────────────────────────────────────────────────────── */

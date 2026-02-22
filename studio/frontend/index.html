@@ -11,14 +11,11 @@
 
   <!-- Header -->
   <header id="header">
-    <span class="logo">CrowdListen <span class="logo-accent">Studio</span></span>
-    <nav class="tabs">
-      <button class="tab active" data-tab="create">Create</button>
-      <button class="tab" data-tab="queue">Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
-      <button class="tab" data-tab="published">Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
-    </nav>
+    <span class="logo" onclick="goToLanding()" style="cursor:pointer">CrowdListen <span class="logo-accent">Studio</span></span>
     <div class="header-right">
       <span id="upload-status" class="upload-status"></span>
+      <button class="nav-link" data-tab="queue" onclick="switchTab('queue')">Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
+      <button class="nav-link" data-tab="published" onclick="switchTab('published')">Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
     </div>
   </header>
 
