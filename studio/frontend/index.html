@@ -13,13 +13,11 @@
   <header id="header">
     <span class="logo">CrowdListen <span class="logo-accent">Studio</span></span>
     <nav class="tabs" id="tabs">
-      <button class="tab active" data-tab="create">🎬 Create</button>
-      <button class="tab" data-tab="queue">⏳ Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
-      <button class="tab" data-tab="published">✅ Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
+      <button class="tab active" data-tab="create">Create</button>
+      <button class="tab" data-tab="queue">Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
+      <button class="tab" data-tab="published">Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
     </nav>
     <div class="header-right">
-      <button class="upload-btn" onclick="document.getElementById('file-input').click()" title="Add a new source video">+ Add video</button>
-      <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
       <span id="upload-status" class="upload-status"></span>
     </div>
   </header>
@@ -29,123 +27,136 @@
     <!-- ── CREATE TAB ─────────────────────────────────────────────── -->
     <div id="tab-create" class="tab-page active">
 
-      <!-- Left: Clip browser -->
-      <aside id="clip-panel">
-        <div class="clip-panel-header">
-          <div class="source-pills" id="source-pills">
-            <button class="pill active" data-source="all">All</button>
-            <button class="pill" data-source="office">Office</button>
-            <button class="pill" data-source="sv1">SV1</button>
-            <button class="pill" data-source="sv2">SV2</button>
-            <button class="pill" data-source="sv3">SV3</button>
-          </div>
-          <div class="score-row">
-            <span class="score-label">Score ≥ <strong id="score-val">7</strong></span>
-            <input type="range" id="score-slider" min="1" max="10" value="7"/>
-          </div>
-        </div>
-        <div id="clip-list" class="clip-list">
-          <div class="loading-state">Loading clips…</div>
-        </div>
-      </aside>
+      <!-- STEP 1: Home / Clip picker -->
+      <div id="create-home" class="create-home">
 
-      <!-- Right: Composer -->
-      <main id="compose-panel">
-
-        <!-- Empty state -->
-        <div id="compose-empty" class="compose-empty">
-          <div class="empty-icon">🎬</div>
-          <p class="empty-title">Pick a clip to start</p>
-          <p class="empty-sub">Select any clip from the left to begin composing</p>
+        <div class="create-hero">
+          <h1 class="create-title">What do you want to<br>create today?</h1>
+          <p class="create-sub">Pick a clip from The Office or Silicon Valley, write a caption or narration, and hit render.</p>
         </div>
 
-        <!-- Composer (shown once clip selected) -->
-        <div id="composer" class="composer hidden">
-
-          <!-- Clip preview strip -->
-          <div id="clip-strip" class="clip-strip">
-            <div class="clip-strip-thumb" id="strip-thumb" onclick="openPreviewModal()">
-              <span id="strip-emoji">🏢</span>
-              <span class="strip-play">▶</span>
+        <!-- Clip picker card -->
+        <div class="clip-picker-card">
+          <div class="clip-picker-header">
+            <div class="source-pills" id="source-pills">
+              <button class="pill active" data-source="all">All</button>
+              <button class="pill" data-source="office">The Office</button>
+              <button class="pill" data-source="sv1">SV 1</button>
+              <button class="pill" data-source="sv2">SV 2</button>
+              <button class="pill" data-source="sv3">SV 3</button>
             </div>
-            <div class="clip-strip-info">
-              <div class="strip-top">
-                <span id="strip-source" class="source-tag"></span>
-                <span id="strip-score" class="score-badge"></span>
-                <span id="strip-ts" class="strip-ts"></span>
-                <span id="strip-dur" class="strip-dur"></span>
-              </div>
-              <div id="strip-visual" class="strip-visual"></div>
-            </div>
-            <button class="strip-change" onclick="clearClipSelection()">✕ Change</button>
-          </div>
-
-          <!-- Video type toggle -->
-          <div class="type-toggle">
-            <button class="type-btn active" data-type="meme" onclick="setType('meme')">🎭 Meme</button>
-            <button class="type-btn" data-type="narration" onclick="setType('narration')">🎙 Narration + CTA</button>
-          </div>
-
-          <!-- MEME fields -->
-          <div id="fields-meme" class="compose-fields">
-            <div class="field-group">
-              <label>Caption <span class="hint">— burned into the clip</span></label>
-              <textarea id="meme-caption" rows="3" placeholder="When your PM adds one more thing to the sprint…"></textarea>
+            <div class="score-row">
+              <span class="score-label">Score ≥ <strong id="score-val">7</strong></span>
+              <input type="range" id="score-slider" min="1" max="10" value="7"/>
             </div>
           </div>
-
-          <!-- NARRATION fields -->
-          <div id="fields-narration" class="compose-fields hidden">
-            <div class="field-group">
-              <label>Hook caption</label>
-              <textarea id="narr-caption" rows="2" placeholder="Caption for the opening clip…"></textarea>
-            </div>
-            <div class="field-group">
-              <label>Narration script <span class="hint" id="word-count-hint"></span></label>
-              <textarea id="narr-script" rows="5"
-                placeholder="Write 15–25 seconds of narration here. This plays over a dark background after the hook clip…"
-                oninput="updateWordCount()"></textarea>
-            </div>
-            <div class="tts-row">
-              <div class="field-group" style="flex:1">
-                <label>Voice</label>
-                <select id="voice-select">
-                  <optgroup label="OpenAI">
-                    <option value="shimmer">shimmer</option>
-                    <option value="alloy">alloy</option>
-                    <option value="echo">echo</option>
-                    <option value="nova">nova</option>
-                    <option value="fable">fable</option>
-                    <option value="onyx">onyx</option>
-                  </optgroup>
-                  <optgroup label="ElevenLabs">
-                    <option value="Rachel">Rachel</option>
-                    <option value="Bella">Bella</option>
-                    <option value="Adam">Adam</option>
-                  </optgroup>
-                </select>
-              </div>
-              <button class="btn btn-secondary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">
-                🎤 Generate voice
-              </button>
-            </div>
-            <div id="audio-preview" class="audio-preview hidden"></div>
-            <div class="cta-pill">
-              📣 CTA auto-appended · <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
-            </div>
+          <div id="clip-list" class="clip-grid">
+            <div class="loading-state">Loading clips…</div>
           </div>
+        </div>
 
-          <!-- Render bar — always visible -->
-          <div class="render-bar">
-            <input type="text" id="output-name" class="output-input" placeholder="output-filename (auto-filled)"/>
-            <button class="btn btn-primary btn-render" id="render-btn" onclick="submitRender()">
-              🚀 Render
+        <!-- or divider -->
+        <div class="or-divider"><span>or</span></div>
+
+        <!-- Upload card -->
+        <button class="upload-card" onclick="document.getElementById('file-input').click()">
+          <span class="upload-card-icon">＋</span>
+          <div class="upload-card-text">
+            <span class="upload-card-label">Upload new video</span>
+            <span class="upload-card-hint">Gemini will analyze and extract clips automatically</span>
+          </div>
+        </button>
+        <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
+
+      </div><!-- /create-home -->
+
+      <!-- STEP 2: Composer -->
+      <div id="composer-view" class="composer-view hidden">
+
+        <!-- Clip summary strip -->
+        <div id="clip-strip" class="clip-strip">
+          <div class="clip-strip-thumb" id="strip-thumb" onclick="openPreviewModal()">
+            <span id="strip-emoji">🏢</span>
+            <span class="strip-play">▶</span>
+          </div>
+          <div class="clip-strip-info">
+            <div class="strip-top">
+              <span id="strip-source" class="source-tag"></span>
+              <span id="strip-score" class="score-badge"></span>
+              <span id="strip-ts" class="strip-ts"></span>
+              <span id="strip-dur" class="strip-dur"></span>
+            </div>
+            <div id="strip-visual" class="strip-visual"></div>
+          </div>
+          <button class="strip-change" onclick="clearClipSelection()">← All clips</button>
+        </div>
+
+        <!-- Video type toggle -->
+        <div class="type-toggle">
+          <button class="type-btn active" data-type="meme" onclick="setType('meme')">🎭 Meme</button>
+          <button class="type-btn" data-type="narration" onclick="setType('narration')">🎙 Narration + CTA</button>
+        </div>
+
+        <!-- MEME fields -->
+        <div id="fields-meme" class="compose-fields">
+          <div class="field-group">
+            <label>Caption <span class="hint">— burned into the clip</span></label>
+            <textarea id="meme-caption" rows="3" placeholder="When your PM adds one more thing to the sprint…"></textarea>
+          </div>
+        </div>
+
+        <!-- NARRATION fields -->
+        <div id="fields-narration" class="compose-fields hidden">
+          <div class="field-group">
+            <label>Hook caption</label>
+            <textarea id="narr-caption" rows="2" placeholder="Caption for the opening clip…"></textarea>
+          </div>
+          <div class="field-group">
+            <label>Narration script <span class="hint" id="word-count-hint"></span></label>
+            <textarea id="narr-script" rows="5"
+              placeholder="Write 15–25 seconds of narration here. This plays over a dark background after the hook clip…"
+              oninput="updateWordCount()"></textarea>
+          </div>
+          <div class="tts-row">
+            <div class="field-group" style="flex:1">
+              <label>Voice</label>
+              <select id="voice-select">
+                <optgroup label="OpenAI">
+                  <option value="shimmer">shimmer</option>
+                  <option value="alloy">alloy</option>
+                  <option value="echo">echo</option>
+                  <option value="nova">nova</option>
+                  <option value="fable">fable</option>
+                  <option value="onyx">onyx</option>
+                </optgroup>
+                <optgroup label="ElevenLabs">
+                  <option value="Rachel">Rachel</option>
+                  <option value="Bella">Bella</option>
+                  <option value="Adam">Adam</option>
+                </optgroup>
+              </select>
+            </div>
+            <button class="btn btn-secondary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">
+              🎤 Generate voice
             </button>
           </div>
-
+          <div id="audio-preview" class="audio-preview hidden"></div>
+          <div class="cta-pill">
+            📣 CTA auto-appended · <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
+          </div>
         </div>
-      </main>
-    </div>
+
+        <!-- Render bar -->
+        <div class="render-bar">
+          <input type="text" id="output-name" class="output-input" placeholder="output-filename (auto-filled)"/>
+          <button class="btn btn-primary btn-render" id="render-btn" onclick="submitRender()">
+            🚀 Render
+          </button>
+        </div>
+
+      </div><!-- /composer-view -->
+
+    </div><!-- /tab-create -->
 
     <!-- ── QUEUE TAB ───────────────────────────────────────────────── -->
     <div id="tab-queue" class="tab-page">

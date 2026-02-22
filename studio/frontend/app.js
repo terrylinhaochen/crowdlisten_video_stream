@@ -106,17 +106,13 @@ function renderClipList() {
   el.innerHTML=S.clips.map(c=>{
     const active=S.selected?.clip_id===c.clip_id?' active':'';
     return `<div class="clip-card${active}" onclick="selectClip('${c.clip_id}')">
-      <div class="clip-card-thumb" onclick="event.stopPropagation();previewClip('${c.clip_id}')"
-        title="▶ Preview">${c.source_slug==='office'?'🏢':'💻'}</div>
-      <div class="clip-card-body">
-        <div class="cc-top">
-          <span class="score-badge ${scoreClass(c.meme_score)}">${c.meme_score}</span>
-          <span class="source-tag">${c.source_label.replace('Silicon Valley ','SV')}</span>
-          <span class="clip-ts">${c.timestamp}</span>
-        </div>
-        <div class="cc-caption">${esc(c.meme_caption)}</div>
-        <div class="cc-visual">${esc(c.what_happens_visually)}</div>
+      <div class="cc-top">
+        <span class="score-badge ${scoreClass(c.meme_score)}">${c.meme_score}</span>
+        <span class="source-tag">${c.source_label.replace('Silicon Valley ','SV')}</span>
+        <span class="clip-ts">${c.timestamp}</span>
       </div>
+      <div class="cc-caption">${esc(c.meme_caption)}</div>
+      <div class="cc-visual">${esc(c.what_happens_visually)}</div>
     </div>`;
   }).join('');
 }
@@ -132,14 +128,14 @@ function clearClipSelection() {
   S.selected=null;
   S.ttsAudio=null;
   renderClipList();
-  $('composer').classList.add('hidden');
-  $('compose-empty').style.display='';
+  $('composer-view').classList.add('hidden');
+  $('create-home').classList.remove('hidden');
 }
 
 function showComposer() {
   const c=S.selected;
-  $('compose-empty').style.display='none';
-  $('composer').classList.remove('hidden');
+  $('create-home').classList.add('hidden');
+  $('composer-view').classList.remove('hidden');
 
   // Strip
   $('strip-emoji').textContent=c.source_slug==='office'?'🏢':'💻';
