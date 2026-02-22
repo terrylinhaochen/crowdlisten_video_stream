@@ -76,8 +76,7 @@
             <span class="type-label">Video type:</span>
             <div class="type-buttons" id="type-buttons">
               <button class="type-btn active" data-type="meme">🎭 Meme</button>
-              <button class="type-btn" data-type="narration">🎙 Narration</button>
-              <button class="type-btn" data-type="cta_only">📣 CTA Only</button>
+              <button class="type-btn" data-type="narration">🎙 Hook + Narration</button>
             </div>
           </div>
 
@@ -137,20 +136,10 @@
               <button class="btn btn-primary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">🎤 Generate Voice</button>
             </div>
             <div id="audio-preview" class="audio-preview hidden"></div>
-            <div class="field-group">
-              <label>CTA tagline</label>
-              <input type="text" id="narr-cta-tagline" value="Try CrowdListen now"/>
-            </div>
-            <div class="field-group">
-              <label>CTA subtitle</label>
-              <input type="text" id="narr-cta-subtitle" value="the PM for AI Agents"/>
+            <div class="cta-fixed-badge">
+              📣 CTA auto-appended: <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
             </div>
           </div>
-
-          <!-- CTA ONLY fields -->
-          <div id="fields-cta_only" class="compose-fields hidden">
-            <div class="cta-preview-card">
-              <div class="cta-prev-logo">CRD</div>
               <div class="cta-prev-tagline" id="cta-prev-tagline">Try CrowdListen now</div>
               <div class="cta-prev-subtitle" id="cta-prev-subtitle">the PM for AI Agents</div>
               <div class="cta-prev-url">crowdlisten.com</div>

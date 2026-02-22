@@ -88,7 +88,7 @@ function connectSSE() {
 const STEPS = {
   meme:       ['render'],
   narration:  ['hook','tts','body','cta','assemble'],
-  cta_only:   ['cta'],
+
 };
 
 function handleProgress(d) {
@@ -275,17 +275,12 @@ document.querySelectorAll('.type-btn').forEach(b=>b.addEventListener('click',()=
 }));
 
 function switchVideoType(type) {
-  ['meme','narration','cta_only'].forEach(t=>{
+  ['meme','narration'].forEach(t=>{
     $(`fields-${t}`).classList.toggle('hidden', t!==type);
   });
   // CTA only doesn't need a clip
-  const needsClip = type !== 'cta_only';
-  if (!needsClip) {
-    $('selected-clip-card').classList.add('hidden');
-    $('no-clip-notice').classList.add('hidden');
-  } else {
-    updateSelectedClipCard();
-  }
+
+  updateSelectedClipCard();
 }
 
 function updateWordCount() {
@@ -299,10 +294,6 @@ function syncProvider() {
   return ['Rachel','Bella','Adam','Antoni'].includes(v) ? 'elevenlabs' : 'openai';
 }
 
-function updateCtaPreview() {
-  $('cta-prev-tagline').textContent = $('cta-tagline-input').value;
-  $('cta-prev-subtitle').textContent = $('cta-subtitle-input').value;
-}
 
 function previewSelectedClip() {
   if (!S.selectedClip) return;
@@ -353,15 +344,9 @@ async function submitRender() {
     body.body_audio_file = S.ttsAudio?.audio_file || null;
     body.voice        = $('voice-select').value;
     body.provider     = syncProvider();
-    body.cta_tagline  = $('narr-cta-tagline').value;
-    body.cta_subtitle = $('narr-cta-subtitle').value;
+    // CTA is fixed — uses defaults from config.py
 
-  } else { // cta_only
-    body.hook_clip_id = '';
-    body.cta_tagline  = $('cta-tagline-input').value;
-    body.cta_subtitle = $('cta-subtitle-input').value;
-  }
-
+  
   const btn = $('render-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Queuing…';
