@@ -13,6 +13,7 @@ from .config import (PUBLISHED_DIR, TMP_DIR, REVIEW_DIR, INBOX_DIR,
 from . import clips as clip_lib
 from . import queue as q
 from . import sse as sse_bus
+from . import publish as publish_lib
 
 app = FastAPI(title="CrowdListen Studio")
 
@@ -296,9 +297,12 @@ def reject_video(filename: str):
 
 @app.get("/api/published")
 def list_published():
+    from datetime import timedelta
     today = date.today()
+    week_ago = today - timedelta(days=7)
     videos = []
     today_count = 0
+    week_count = 0
 
     if PUBLISHED_DIR.exists():
         all_vids = sorted(
@@ -312,6 +316,8 @@ def list_published():
             size_mb = round(mp4.stat().st_size / 1024 / 1024, 1)
             if mtime.date() == today:
                 today_count += 1
+            if mtime.date() >= week_ago:
+                week_count += 1
             videos.append({
                 "filename": mp4.name,
                 "rel_path": str(rel),
@@ -321,7 +327,7 @@ def list_published():
                 "url": f"/api/published/{str(rel)}",
             })
 
-    return {"videos": videos, "today_count": today_count, "daily_target": 2}
+    return {"videos": videos, "today_count": today_count, "week_count": week_count, "daily_target": 2}
 
 
 @app.get("/api/published/{rel_path:path}")
@@ -332,6 +338,33 @@ def serve_published(rel_path: str):
     if not path.exists():
         raise HTTPException(404, "Video not found")
     return FileResponse(str(path), media_type="video/mp4")
+
+
+# ── Publish ────────────────────────────────────────────────────────────────
+
+class PublishRequest(BaseModel):
+    rel_path: str
+    platform: str  # "tiktok" | "instagram" | "both"
+    caption: str = ""
+
+
+@app.post("/api/publish")
+def publish_video(req: PublishRequest):
+    """Publish a video to TikTok, Instagram, or both."""
+    # Resolve rel_path against PUBLISHED_DIR
+    filepath = (PUBLISHED_DIR / req.rel_path).resolve()
+    if not str(filepath).startswith(str(PUBLISHED_DIR.resolve())):
+        raise HTTPException(403, "Forbidden path")
+    if not filepath.exists():
+        raise HTTPException(404, f"Video not found: {req.rel_path}")
+
+    result = publish_lib.publish_video(str(filepath), req.caption, req.platform)
+
+    # Normalize response
+    if req.platform == "both":
+        return {"results": result.get("results", [])}
+    else:
+        return {"results": [result]}
 
 
 @app.get("/api/sources")

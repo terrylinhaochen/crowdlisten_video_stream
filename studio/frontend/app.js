@@ -12,8 +12,9 @@ const S = {
   activeTasks: {},
   jobs: [],
   review: [],
-  published: { videos: [], today_count: 0, daily_target: 2 },
+  published: { videos: [], today_count: 0, daily_target: 2, week_count: 0 },
   reviewFile: null,
+  postingVideo: null,    // {rel_path, filename} for post modal
 };
 
 const STEPS = { meme: ['render','cta','assemble'], narration: ['hook','tts','body','cta','assemble'] };
@@ -166,14 +167,18 @@ function renderHookLibrary(clips) {
   }).join('');
 }
 
-function selectHookClip(clipId) {
-  const clip = S.clips.find(c => c.clip_id === clipId);
-  if (!clip) return;
-  S.hookClip = clip;
-  renderHookClip();
-  renderHookLibrary(
-    (S.clips || []).filter(c => c.meme_score >= 8)
-  );
+async function selectHookClip(clipId) {
+  // Fetch clip from API since S.clips may be filtered/empty
+  try {
+    const clip = await api(`/api/clips/${clipId}`);
+    if (!clip) return;
+    S.hookClip = clip;
+    renderHookClip();
+    // Re-fetch hooks to update the library with the new selection
+    fetchHooks();
+  } catch(e) {
+    toast(`Failed to select clip: ${e.message}`, 'error');
+  }
 }
 
 function handleClipsBack() {
@@ -505,8 +510,14 @@ function renderReview() {
 }
 
 function renderPublished() {
-  const {videos,today_count,daily_target}=S.published;
+  const {videos,today_count,daily_target,week_count}=S.published;
   $('daily-tracker').textContent=`${today_count} / ${daily_target} today`;
+
+  // Update stats dashboard
+  $('stat-total').textContent=videos.length;
+  $('stat-week').textContent=week_count||0;
+  $('stat-today').textContent=today_count;
+
   const el=$('published-grid');
   if(!videos.length){el.innerHTML='<div class="empty-state">No published videos yet</div>';return;}
 
@@ -536,6 +547,7 @@ function renderPublished() {
               <div class="video-meta">${v.size_mb}MB · ${relTime(v.created_at)}</div>
               <div class="video-actions">
                 <a class="btn btn-secondary btn-sm" href="${v.url}" download="${esc(v.filename)}">↓ Download</a>
+                <button class="btn btn-sm post-btn" onclick="postVideo('${esc(v.rel_path)}','${esc(v.filename)}')">↑ Post</button>
               </div>
             </div>
           </div>`).join('')}
@@ -640,6 +652,50 @@ setInterval(()=>{
   fetchJobs();
   if(S.tab==='published'){fetchReview();fetchPublished();}
 }, 10000);
+
+// ── Post to platforms ──────────────────────────────────────────────
+
+function postVideo(relPath, filename) {
+  S.postingVideo = { rel_path: relPath, filename: filename };
+  $('post-modal').classList.remove('hidden');
+}
+
+function closePostModal() {
+  $('post-modal').classList.add('hidden');
+  S.postingVideo = null;
+}
+
+async function doPost(platform) {
+  if (!S.postingVideo) return;
+  const { rel_path, filename } = S.postingVideo;
+  closePostModal();
+
+  toast(`Posting ${filename} to ${platform}...`, 'info');
+
+  try {
+    const body = {
+      rel_path: rel_path,
+      platform: platform,
+      caption: filename.replace(/\.mp4$/i, '').replace(/_/g, ' ')
+    };
+    const result = await api('/api/publish', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+
+    // Process results
+    const results = result.results || [];
+    results.forEach(r => {
+      if (r.ok) {
+        toast(`Posted to ${r.platform}!`, 'success');
+      } else {
+        toast(`${r.platform}: ${r.message}`, 'error');
+      }
+    });
+  } catch(e) {
+    toast(`Post failed: ${e.message}`, 'error');
+  }
+}
 
 // ── Init ──────────────────────────────────────────────────────────
 
