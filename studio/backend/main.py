@@ -14,6 +14,7 @@ from . import clips as clip_lib
 from . import queue as q
 from . import sse as sse_bus
 from .search import smart_search
+from . import calendar_api as cal
 
 app = FastAPI(title="CrowdListen Studio")
 
@@ -428,6 +429,86 @@ async def intake_video(file: UploadFile = File(...)):
 
     threading.Thread(target=_analyze, daemon=True).start()
     return {"ok": True, "job_id": job_id, "filename": file.filename, "path": str(dest)}
+
+
+# ── Calendar ───────────────────────────────────────────────────────────────────
+
+@app.get("/api/calendar")
+def list_calendar():
+    return {"entries": cal.load_calendar()}
+
+
+class CalendarEntryCreate(BaseModel):
+    topic: str
+    date: str  # YYYY-MM-DD
+
+
+@app.post("/api/calendar")
+def create_calendar_entry(body: CalendarEntryCreate):
+    entry = cal.add_entry(body.topic, body.date)
+    return entry
+
+
+class CalendarEntryUpdate(BaseModel):
+    status: str | None = None
+    clip_id: str | None = None
+    output_name: str | None = None
+    topic: str | None = None
+    date: str | None = None
+
+
+@app.put("/api/calendar/{entry_id}")
+def update_calendar_entry(entry_id: str, body: CalendarEntryUpdate):
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    entry = cal.update_entry(entry_id, updates)
+    if not entry:
+        raise HTTPException(404, "Calendar entry not found")
+    return entry
+
+
+@app.delete("/api/calendar/{entry_id}")
+def delete_calendar_entry(entry_id: str):
+    if not cal.delete_entry(entry_id):
+        raise HTTPException(404, "Calendar entry not found")
+    return {"ok": True}
+
+
+@app.post("/api/calendar/{entry_id}/queue")
+def queue_calendar_render(entry_id: str):
+    """Queue a render job for a calendar entry using its clip_id."""
+    entry = cal.get_entry(entry_id)
+    if not entry:
+        raise HTTPException(404, "Calendar entry not found")
+    if not entry.get("clip_id"):
+        raise HTTPException(400, "No clip selected for this calendar entry")
+
+    clip = clip_lib.get_clip(entry["clip_id"])
+    if not clip:
+        raise HTTPException(404, f"Clip not found: {entry['clip_id']}")
+
+    # Build and queue the job
+    job = q.build_job(
+        mode="meme",
+        hook_clip_id=entry["clip_id"],
+        hook_caption=clip.get("meme_caption", ""),
+        body_script="",
+        body_audio_file=None,
+        voice="shimmer",
+        provider="openai",
+        cta_tagline=CTA_TAGLINE_DEFAULT,
+        cta_subtitle=CTA_SUBTITLE,
+        cta_url=CTA_URL,
+        output_name=entry.get("output_name") or entry["topic"].lower().replace(" ", "_")[:40],
+        source_file=clip["source_file"],
+        start_sec=clip["start_seconds"],
+        duration_sec=clip["duration_seconds"],
+    )
+    q.add_job(job)
+
+    # Update calendar entry status
+    cal.update_entry(entry_id, {"status": "rendering", "output_name": job["output_name"]})
+
+    return {"ok": True, "job": job, "entry": cal.get_entry(entry_id)}
 
 
 # ── Static frontend ───────────────────────────────────────────────────────────

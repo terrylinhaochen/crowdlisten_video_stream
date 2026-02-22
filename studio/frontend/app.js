@@ -14,6 +14,7 @@ const S = {
   review: [],
   published: { videos: [], today_count: 0, daily_target: 2 },
   reviewFile: null,
+  calendar: [],          // calendar entries
 };
 
 const STEPS = { meme: ['render','cta','assemble'], narration: ['hook','tts','body','cta','assemble'] };
@@ -55,6 +56,7 @@ function switchTab(name) {
   if(name==='queue') renderQueue();
   if(name==='published'){fetchReview();fetchPublished();}
   if(name==='create'){fetchSources();}
+  if(name==='calendar'){fetchCalendar();}
 }
 
 // ── SSE ───────────────────────────────────────────────────────────
@@ -178,7 +180,26 @@ function selectHookClip(clipId) {
 
 function handleClipsBack() {
   if(S.clipPickerMode==='hook') { showOnly('narration-page'); }
+  else if(S.clipPickerMode==='calendar') { switchTab('calendar'); S.clipPickerMode='meme'; }
   else { goToUpload(); }
+}
+
+async function assignClipToCalendar(entryId, clipId) {
+  try {
+    const entry = await api(`/api/calendar/${entryId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ clip_id: clipId })
+    });
+    // Update local state
+    const idx = S.calendar.findIndex(e => e.id === entryId);
+    if (idx !== -1) S.calendar[idx] = entry;
+    S.calendarPickEntryId = null;
+    S.clipPickerMode = 'meme';
+    toast('Clip assigned to calendar entry');
+    switchTab('calendar');
+  } catch(e) {
+    toast(`Failed: ${e.message}`, 'error');
+  }
 }
 
 function goToLanding() {
@@ -236,6 +257,9 @@ function selectClip(clipId) {
     S.hookClip=clip;
     renderHookClip();
     showOnly('narration-page');
+  } else if(S.clipPickerMode==='calendar' && S.calendarPickEntryId) {
+    // Update calendar entry with selected clip
+    assignClipToCalendar(S.calendarPickEntryId, clipId);
   } else {
     S.selected=clip;
     renderClipList();
@@ -669,6 +693,127 @@ setInterval(()=>{
   if(S.tab==='published'){fetchReview();fetchPublished();}
 }, 10000);
 
+// ── Calendar ───────────────────────────────────────────────────────
+
+async function fetchCalendar() {
+  try {
+    const data = await api('/api/calendar');
+    S.calendar = data.entries || [];
+    renderCalendar();
+  } catch(e) {
+    $('calendar-list').innerHTML = `<div class="empty-state" style="color:var(--red)">${e.message}</div>`;
+  }
+}
+
+function renderCalendar() {
+  const el = $('calendar-list');
+  if (!S.calendar.length) {
+    el.innerHTML = '<div class="empty-state">No topics scheduled yet</div>';
+    return;
+  }
+  // Sort by date ascending
+  const sorted = [...S.calendar].sort((a, b) => a.date.localeCompare(b.date));
+  el.innerHTML = `
+    <div class="cal-table">
+      <div class="cal-header">
+        <span class="cal-col-date">Date</span>
+        <span class="cal-col-topic">Topic</span>
+        <span class="cal-col-status">Status</span>
+        <span class="cal-col-actions">Actions</span>
+      </div>
+      ${sorted.map(e => {
+        const statusClass = `cal-status-${e.status}`;
+        const canQueue = e.clip_id && e.status === 'planned';
+        return `
+          <div class="cal-row">
+            <span class="cal-col-date">${formatCalDate(e.date)}</span>
+            <span class="cal-col-topic">${esc(e.topic)}</span>
+            <span class="cal-col-status"><span class="cal-status-badge ${statusClass}">${e.status}</span></span>
+            <span class="cal-col-actions">
+              ${canQueue ? `<button class="btn btn-primary btn-sm" onclick="queueCalendarRender('${e.id}')">Queue render</button>` : ''}
+              ${!e.clip_id && e.status === 'planned' ? `<button class="btn btn-secondary btn-sm" onclick="pickClipForCalendar('${e.id}')">Pick clip</button>` : ''}
+              <button class="btn btn-danger btn-sm cal-del-btn" onclick="deleteCalendarEntry('${e.id}')">Delete</button>
+            </span>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function formatCalDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function toggleCalendarForm() {
+  const form = $('calendar-add-form');
+  const isHidden = form.classList.contains('hidden');
+  form.classList.toggle('hidden');
+  if (isHidden) {
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('cal-date-input').value = today;
+    $('cal-topic-input').value = '';
+    $('cal-topic-input').focus();
+  }
+}
+
+async function addCalendarEntry() {
+  const topic = $('cal-topic-input').value.trim();
+  const date = $('cal-date-input').value;
+  if (!topic) { toast('Enter a topic', 'error'); return; }
+  if (!date) { toast('Select a date', 'error'); return; }
+  try {
+    const entry = await api('/api/calendar', {
+      method: 'POST',
+      body: JSON.stringify({ topic, date })
+    });
+    S.calendar.push(entry);
+    renderCalendar();
+    toggleCalendarForm();
+    toast('Topic added to calendar');
+  } catch(e) {
+    toast(`Failed: ${e.message}`, 'error');
+  }
+}
+
+async function deleteCalendarEntry(id) {
+  if (!confirm('Delete this calendar entry?')) return;
+  try {
+    await api(`/api/calendar/${id}`, { method: 'DELETE' });
+    S.calendar = S.calendar.filter(e => e.id !== id);
+    renderCalendar();
+    toast('Entry deleted', 'info');
+  } catch(e) {
+    toast(`Failed: ${e.message}`, 'error');
+  }
+}
+
+async function queueCalendarRender(id) {
+  try {
+    const result = await api(`/api/calendar/${id}/queue`, { method: 'POST' });
+    // Update local state
+    const entry = S.calendar.find(e => e.id === id);
+    if (entry) {
+      entry.status = 'rendering';
+      entry.output_name = result.entry?.output_name;
+    }
+    renderCalendar();
+    toast('Queued for render!');
+    switchTab('queue');
+  } catch(e) {
+    toast(`Failed: ${e.message}`, 'error');
+  }
+}
+
+function pickClipForCalendar(entryId) {
+  // Store entry ID, go to clip picker, then handle selection
+  S.calendarPickEntryId = entryId;
+  S.clipPickerMode = 'calendar';
+  goToClips('calendar');
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -678,4 +823,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   fetchPublished();
   fetchReview();
   fetchSources();
+  fetchCalendar();
 });

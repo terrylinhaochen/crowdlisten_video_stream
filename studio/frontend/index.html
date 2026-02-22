@@ -15,6 +15,7 @@
     <div class="header-right">
       <span id="upload-status" class="upload-status"></span>
       <button class="nav-link sync-btn" onclick="syncLibrary()" title="Sync library from disk">⟳</button>
+      <button class="nav-link" data-tab="calendar" onclick="switchTab('calendar')">Calendar</button>
       <button class="nav-link" data-tab="queue" onclick="switchTab('queue')">Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
       <button class="nav-link" data-tab="published" onclick="switchTab('published')">Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
     </div>
@@ -288,6 +289,29 @@
         </div>
         <div id="published-grid" class="video-grid">
           <div class="empty-state">No published videos yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CALENDAR TAB ──────────────────────────────────────────────── -->
+    <div id="tab-calendar" class="tab-page">
+      <div class="calendar-page">
+        <div class="section-header-row">
+          <h3 class="section-title">Content Calendar</h3>
+          <button class="btn btn-primary btn-sm" id="add-topic-btn" onclick="toggleCalendarForm()">+ Add topic</button>
+        </div>
+
+        <!-- Inline add form (hidden by default) -->
+        <div id="calendar-add-form" class="calendar-add-form hidden">
+          <input type="text" id="cal-topic-input" class="cal-input" placeholder="Topic or content idea..."/>
+          <input type="date" id="cal-date-input" class="cal-input cal-date-input"/>
+          <button class="btn btn-primary btn-sm" onclick="addCalendarEntry()">Save</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleCalendarForm()">Cancel</button>
+        </div>
+
+        <!-- Calendar entries table -->
+        <div id="calendar-list" class="calendar-list">
+          <div class="empty-state">No topics scheduled yet</div>
         </div>
       </div>
     </div>
