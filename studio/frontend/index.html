@@ -11,95 +11,85 @@
 
   <!-- Header -->
   <header id="header">
-    <div class="header-left">
-      <span class="logo">CrowdListen <span class="logo-accent">Studio</span></span>
-    </div>
+    <span class="logo">CrowdListen <span class="logo-accent">Studio</span></span>
     <nav class="tabs" id="tabs">
-      <button class="tab active" data-tab="intake">📥 Intake</button>
-      <button class="tab" data-tab="library">📚 Library</button>
-      <button class="tab" data-tab="compose">✏️ Compose</button>
-      <button class="tab" data-tab="review">👁 Review <span id="review-badge" class="tab-badge hidden">0</span></button>
-      <button class="tab" data-tab="published">📤 Published</button>
+      <button class="tab active" data-tab="create">🎬 Create</button>
+      <button class="tab" data-tab="queue">⏳ Queue <span id="queue-badge" class="tab-badge hidden">0</span></button>
+      <button class="tab" data-tab="published">✅ Published <span id="pub-badge" class="tab-badge hidden">0</span></button>
     </nav>
     <div class="header-right">
-      <span id="tasks-summary" class="tasks-summary"></span>
+      <button class="upload-btn" onclick="document.getElementById('file-input').click()" title="Add a new source video">+ Add video</button>
+      <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
+      <span id="upload-status" class="upload-status"></span>
     </div>
   </header>
 
-  <!-- Main -->
   <div id="main">
 
-    <!-- Tab pages -->
-    <div id="tab-content">
+    <!-- ── CREATE TAB ─────────────────────────────────────────────── -->
+    <div id="tab-create" class="tab-page active">
 
-      <!-- INTAKE -->
-      <div id="tab-intake" class="tab-page active">
-        <div class="page-inner">
-          <div class="drop-zone" id="drop-zone">
-            <div class="drop-icon">🎥</div>
-            <p class="drop-title">Drop a video to add to your library</p>
-            <p class="drop-sub">MP4 · MOV · AVI — Gemini will auto-analyze it</p>
-            <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files</button>
-            <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
-          </div>
-          <div id="intake-history" class="intake-history"></div>
-        </div>
-      </div>
-
-      <!-- LIBRARY -->
-      <div id="tab-library" class="tab-page">
-        <div class="library-filters">
+      <!-- Left: Clip browser -->
+      <aside id="clip-panel">
+        <div class="clip-panel-header">
           <div class="source-pills" id="source-pills">
             <button class="pill active" data-source="all">All</button>
-            <button class="pill" data-source="office">The Office</button>
+            <button class="pill" data-source="office">Office</button>
             <button class="pill" data-source="sv1">SV1</button>
             <button class="pill" data-source="sv2">SV2</button>
             <button class="pill" data-source="sv3">SV3</button>
           </div>
-          <div class="filter-right">
-            <label>Min score: <strong id="score-val">7</strong></label>
+          <div class="score-row">
+            <span class="score-label">Score ≥ <strong id="score-val">7</strong></span>
             <input type="range" id="score-slider" min="1" max="10" value="7"/>
-            <button class="btn btn-sm btn-secondary" onclick="fetchClips()">↻ Refresh</button>
           </div>
         </div>
-        <div id="clip-grid" class="clip-grid">
+        <div id="clip-list" class="clip-list">
           <div class="loading-state">Loading clips…</div>
         </div>
-      </div>
+      </aside>
 
-      <!-- COMPOSE -->
-      <div id="tab-compose" class="tab-page">
-        <div class="compose-inner">
+      <!-- Right: Composer -->
+      <main id="compose-panel">
 
-          <!-- Video type selector -->
-          <div class="video-type-bar">
-            <span class="type-label">Video type:</span>
-            <div class="type-buttons" id="type-buttons">
-              <button class="type-btn active" data-type="meme">🎭 Meme</button>
-              <button class="type-btn" data-type="narration">🎙 Hook + Narration</button>
+        <!-- Empty state -->
+        <div id="compose-empty" class="compose-empty">
+          <div class="empty-icon">🎬</div>
+          <p class="empty-title">Pick a clip to start</p>
+          <p class="empty-sub">Select any clip from the left to begin composing</p>
+        </div>
+
+        <!-- Composer (shown once clip selected) -->
+        <div id="composer" class="composer hidden">
+
+          <!-- Clip preview strip -->
+          <div id="clip-strip" class="clip-strip">
+            <div class="clip-strip-thumb" id="strip-thumb" onclick="openPreviewModal()">
+              <span id="strip-emoji">🏢</span>
+              <span class="strip-play">▶</span>
             </div>
+            <div class="clip-strip-info">
+              <div class="strip-top">
+                <span id="strip-source" class="source-tag"></span>
+                <span id="strip-score" class="score-badge"></span>
+                <span id="strip-ts" class="strip-ts"></span>
+                <span id="strip-dur" class="strip-dur"></span>
+              </div>
+              <div id="strip-visual" class="strip-visual"></div>
+            </div>
+            <button class="strip-change" onclick="clearClipSelection()">✕ Change</button>
           </div>
 
-          <!-- Selected clip card -->
-          <div id="selected-clip-card" class="selected-clip-card hidden">
-            <div class="sel-clip-info">
-              <span id="sel-source-tag" class="source-tag"></span>
-              <span id="sel-score-badge" class="score-badge"></span>
-              <span id="sel-timestamp" class="sel-ts"></span>
-              <span id="sel-duration" class="sel-dur"></span>
-            </div>
-            <div id="sel-visual" class="sel-visual"></div>
-            <button class="btn btn-sm btn-secondary" id="change-clip-btn" onclick="switchTab('library')">Change clip</button>
-            <button class="btn btn-sm btn-secondary" id="preview-clip-btn" onclick="previewSelectedClip()" disabled>▶ Preview</button>
-          </div>
-          <div id="no-clip-notice" class="no-clip-notice">
-            👈 Go to <strong>Library</strong> and click a clip to select it
+          <!-- Video type toggle -->
+          <div class="type-toggle">
+            <button class="type-btn active" data-type="meme" onclick="setType('meme')">🎭 Meme</button>
+            <button class="type-btn" data-type="narration" onclick="setType('narration')">🎙 Narration + CTA</button>
           </div>
 
           <!-- MEME fields -->
           <div id="fields-meme" class="compose-fields">
             <div class="field-group">
-              <label>Caption <span class="hint">(burned into video)</span></label>
+              <label>Caption <span class="hint">— burned into the clip</span></label>
               <textarea id="meme-caption" rows="3" placeholder="When your PM adds one more thing to the sprint…"></textarea>
             </div>
           </div>
@@ -108,16 +98,18 @@
           <div id="fields-narration" class="compose-fields hidden">
             <div class="field-group">
               <label>Hook caption</label>
-              <textarea id="narr-caption" rows="2" placeholder="Caption for the hook clip…"></textarea>
+              <textarea id="narr-caption" rows="2" placeholder="Caption for the opening clip…"></textarea>
             </div>
             <div class="field-group">
-              <label>Narration script <span class="hint" id="narr-word-count"></span></label>
-              <textarea id="narr-script" rows="6" placeholder="Write your body narration here (aim for 15–25 seconds of speech)…" oninput="updateWordCount()"></textarea>
+              <label>Narration script <span class="hint" id="word-count-hint"></span></label>
+              <textarea id="narr-script" rows="5"
+                placeholder="Write 15–25 seconds of narration here. This plays over a dark background after the hook clip…"
+                oninput="updateWordCount()"></textarea>
             </div>
             <div class="tts-row">
-              <div class="field-group">
+              <div class="field-group" style="flex:1">
                 <label>Voice</label>
-                <select id="voice-select" onchange="syncProvider()">
+                <select id="voice-select">
                   <optgroup label="OpenAI">
                     <option value="shimmer">shimmer</option>
                     <option value="alloy">alloy</option>
@@ -133,81 +125,66 @@
                   </optgroup>
                 </select>
               </div>
-              <button class="btn btn-primary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">🎤 Generate Voice</button>
+              <button class="btn btn-secondary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">
+                🎤 Generate voice
+              </button>
             </div>
             <div id="audio-preview" class="audio-preview hidden"></div>
-            <div class="cta-fixed-badge">
-              📣 CTA auto-appended: <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
-            </div>
-          </div>
-              <div class="cta-prev-tagline" id="cta-prev-tagline">Try CrowdListen now</div>
-              <div class="cta-prev-subtitle" id="cta-prev-subtitle">the PM for AI Agents</div>
-              <div class="cta-prev-url">crowdlisten.com</div>
-            </div>
-            <div class="field-group">
-              <label>Tagline</label>
-              <input type="text" id="cta-tagline-input" value="Try CrowdListen now" oninput="updateCtaPreview()"/>
-            </div>
-            <div class="field-group">
-              <label>Subtitle</label>
-              <input type="text" id="cta-subtitle-input" value="the PM for AI Agents" oninput="updateCtaPreview()"/>
-            </div>
-            <div class="field-group">
-              <label>Duration</label>
-              <select id="cta-duration">
-                <option value="5">5 seconds</option>
-                <option value="8" selected>8 seconds</option>
-                <option value="10">10 seconds</option>
-              </select>
+            <div class="cta-pill">
+              📣 CTA auto-appended · <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
             </div>
           </div>
 
-          <!-- Output + Render -->
+          <!-- Render bar — always visible -->
           <div class="render-bar">
-            <div class="field-group" style="flex:1">
-              <label>Output filename</label>
-              <input type="text" id="output-name" placeholder="my_video_name"/>
-            </div>
+            <input type="text" id="output-name" class="output-input" placeholder="output-filename (auto-filled)"/>
             <button class="btn btn-primary btn-render" id="render-btn" onclick="submitRender()">
-              🚀 Add to Queue
+              🚀 Render
             </button>
           </div>
 
         </div>
-      </div>
+      </main>
+    </div>
 
-      <!-- REVIEW -->
-      <div id="tab-review" class="tab-page">
-        <div id="review-grid" class="review-grid">
-          <div class="empty-state">No videos awaiting review</div>
+    <!-- ── QUEUE TAB ───────────────────────────────────────────────── -->
+    <div id="tab-queue" class="tab-page">
+      <div class="queue-page">
+        <div class="queue-active-section">
+          <h3 class="section-title">Rendering now</h3>
+          <div id="active-tasks" class="active-tasks">
+            <div class="empty-state">Nothing rendering</div>
+          </div>
+        </div>
+        <div class="queue-history-section">
+          <h3 class="section-title">Recent jobs</h3>
+          <div id="queue-history" class="queue-history"></div>
         </div>
       </div>
+    </div>
 
-      <!-- PUBLISHED -->
-      <div id="tab-published" class="tab-page">
-        <div class="published-header">
-          <span id="daily-tracker-text">0 / 2 published today</span>
-          <div id="daily-dots" class="daily-dots"></div>
+    <!-- ── PUBLISHED TAB ──────────────────────────────────────────── -->
+    <div id="tab-published" class="tab-page">
+      <div class="published-page">
+
+        <!-- Pending review -->
+        <div id="review-section" class="review-section hidden">
+          <div class="section-header-row">
+            <h3 class="section-title">Needs review <span id="review-count" class="count-badge">0</span></h3>
+          </div>
+          <div id="review-grid" class="video-grid"></div>
         </div>
-        <div id="published-grid" class="published-grid">
+
+        <!-- Published -->
+        <div class="section-header-row">
+          <h3 class="section-title">Published</h3>
+          <span id="daily-tracker" class="daily-tracker">0 / 2 today</span>
+        </div>
+        <div id="published-grid" class="video-grid">
           <div class="empty-state">No published videos yet</div>
         </div>
       </div>
-
     </div>
-
-    <!-- Tasks side panel -->
-    <aside id="tasks-panel">
-      <div class="tasks-header">
-        Live Tasks
-        <span id="active-task-count" class="badge">0</span>
-      </div>
-      <div id="tasks-list" class="tasks-list">
-        <div class="empty-state" style="padding:16px;font-size:12px">No active tasks</div>
-      </div>
-      <div class="queue-section-header">Queue</div>
-      <div id="queue-list" class="queue-list"></div>
-    </aside>
 
   </div>
 </div>
@@ -219,15 +196,13 @@
     <button class="modal-close" id="modal-close">✕</button>
     <video id="modal-video" controls autoplay playsinline></video>
     <div id="modal-actions" class="modal-actions hidden">
-      <button class="btn btn-success" id="modal-approve">✓ Approve & Publish</button>
+      <button class="btn btn-success" id="modal-approve">✓ Publish</button>
       <button class="btn btn-danger" id="modal-reject">✕ Reject</button>
     </div>
   </div>
 </div>
 
-<!-- Toast container -->
 <div id="toast-container"></div>
-
 <script src="app.js"></script>
 </body>
 </html>
