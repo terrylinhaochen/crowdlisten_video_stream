@@ -162,7 +162,34 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cc-visual{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* STEP 1b — Narration page */
+/* STEP 1b — Upload (Meme flow) */
+.create-upload{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;height:100%;padding:40px 24px;overflow-y:auto;
+  max-width:600px;margin:0 auto;width:100%;
+}
+.upload-hero{text-align:center}
+.upload-title{font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px}
+.upload-sub{font-size:14px;color:var(--text2)}
+.upload-drop-zone{
+  width:100%;background:var(--surface);border:2px dashed var(--border2);
+  border-radius:var(--r-xl);padding:52px 32px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  cursor:pointer;transition:all .2s;text-align:center;
+}
+.upload-drop-zone:hover{border-color:var(--coral);background:var(--coral-bg)}
+.upload-drop-icon{font-size:36px;color:var(--text3)}
+.upload-drop-zone:hover .upload-drop-icon{color:var(--coral)}
+.upload-drop-label{font-size:16px;font-weight:600;color:var(--text)}
+.upload-drop-hint{font-size:13px;color:var(--text2)}
+.browse-library-btn{
+  background:none;border:none;color:var(--text2);font-size:13px;
+  font-family:inherit;cursor:pointer;padding:4px 0;
+  transition:color .15s;text-decoration:underline;text-underline-offset:3px;
+}
+.browse-library-btn:hover{color:var(--coral)}
+
+/* STEP 1c — Narration page */
 .narration-page{
   display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;
   align-self:stretch;

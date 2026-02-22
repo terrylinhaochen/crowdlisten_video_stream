@@ -38,7 +38,7 @@
         </div>
 
         <div class="quick-chips">
-          <button class="quick-chip" onclick="goToClips('meme')">🎭 Meme clip</button>
+          <button class="quick-chip" onclick="goToUpload()">🎭 Meme clip</button>
           <button class="quick-chip" onclick="goToNarration()">🎙 Narration + CTA</button>
         </div>
       </div>
@@ -64,7 +64,28 @@
         </div>
       </div>
 
-      <!-- STEP 1b: Narration / script page -->
+      <!-- STEP 1b: Upload (Meme flow) -->
+      <div id="create-upload" class="create-upload hidden">
+        <button class="back-btn" onclick="goToLanding()" style="align-self:flex-start">← Back</button>
+        <div class="upload-hero">
+          <h2 class="upload-title">🎭 Meme clip</h2>
+          <p class="upload-sub">Upload a video — Gemini extracts the best moments automatically</p>
+        </div>
+        <div class="upload-drop-zone"
+          onclick="document.getElementById('file-input').click()"
+          ondragover="event.preventDefault()"
+          ondrop="event.preventDefault();uploadFile(event.dataTransfer.files[0])">
+          <div class="upload-drop-icon">⬆</div>
+          <div class="upload-drop-label">Drop a video here, or click to browse</div>
+          <div class="upload-drop-hint">MP4, MOV · Gemini analyzes scene by scene · clips appear in the library</div>
+        </div>
+        <div class="or-divider"><span>or</span></div>
+        <button class="browse-library-btn" onclick="goToClips('meme')">
+          Browse 38 existing clips from The Office &amp; Silicon Valley →
+        </button>
+      </div>
+
+      <!-- STEP 1c: Narration / script page -->
       <div id="narration-page" class="narration-page hidden">
 
         <div class="narration-header">

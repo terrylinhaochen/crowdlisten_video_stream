@@ -94,15 +94,20 @@ function connectSSE() {
 // ── Landing routing ───────────────────────────────────────────────
 
 function showOnly(id) {
-  ['create-landing','create-clips','narration-page','composer-view']
-    .forEach(x => $( x).classList.toggle('hidden', x!==id));
+  ['create-landing','create-upload','create-clips','narration-page','composer-view']
+    .forEach(x => $(x).classList.toggle('hidden', x!==id));
+}
+
+function goToUpload() {
+  showOnly('create-upload');
 }
 
 function handleLandingSubmit() {
   const q=$('landing-input').value.trim();
-  if(!q){ goToClips('meme'); return; }
   S.filters.query=q;
-  goToClips('meme');
+  // "narration" keyword → narration page, else → meme upload
+  if(q.toLowerCase().includes('narrat')) { goToNarration(); return; }
+  goToUpload();
 }
 
 function goToClips(mode) {
@@ -127,7 +132,7 @@ function pickHookClip() {
 
 function handleClipsBack() {
   if(S.clipPickerMode==='hook') { showOnly('narration-page'); }
-  else { goToLanding(); }
+  else { goToUpload(); }
 }
 
 function goToLanding() {
