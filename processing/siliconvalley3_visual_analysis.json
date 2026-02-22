@@ -1,0 +1,110 @@
+{
+  "source_file": "siliconvalley3.mp4",
+  "model": "gemini-2.0-flash",
+  "clips": [
+    {
+      "rank": 1,
+      "timestamp": "00:34",
+      "start_seconds": 34,
+      "duration_seconds": 10,
+      "what_happens_visually": "A robotic deer with antlers walks down a road. Erlich kicks it. The robot deer falls over.",
+      "dialogue_hook": "Fucking piece of shit!\nYour little cunt!",
+      "meme_caption": "When your AI-powered\nstartup hits a snag",
+      "news_hook": "Robotics + AI = \ud83d\udc80",
+      "meme_score": 9,
+      "audience": "Founders",
+      "why_it_works": "Physical comedy of kicking a robot deer is funny, relatable to the frustration of building something new."
+    },
+    {
+      "rank": 2,
+      "timestamp": "00:58",
+      "start_seconds": 58,
+      "duration_seconds": 12,
+      "what_happens_visually": "Erlich walks into an office, meets a bald man with glasses, and they shake hands.",
+      "dialogue_hook": "We meet at last.\nMr. Bachman.",
+      "meme_caption": "VCs after you get\nthat YC funding",
+      "news_hook": "YC S24 DEMO DAY!",
+      "meme_score": 9,
+      "audience": "Founders",
+      "why_it_works": "The awkward handshake and forced niceties are relatable to anyone who's met a VC."
+    },
+    {
+      "rank": 3,
+      "timestamp": "01:23",
+      "start_seconds": 83,
+      "duration_seconds": 11,
+      "what_happens_visually": "Erlich lists off a bunch of random things, then says 'Liking Ike?' The bald man looks confused.",
+      "dialogue_hook": "Liking Ike?\nNo.",
+      "meme_caption": "When you try to vibe\ncode with the VC",
+      "news_hook": "Vibe coding is dead.",
+      "meme_score": 8,
+      "audience": "Founders",
+      "why_it_works": "The juxtaposition of random things and 'liking ike' is funny, and the bald man's reaction sells it."
+    },
+    {
+      "rank": 4,
+      "timestamp": "02:17",
+      "start_seconds": 137,
+      "duration_seconds": 10,
+      "what_happens_visually": "A man in an orange jumpsuit is talking to Richard in a jail cell. He has a black eye and cuts on his face.",
+      "dialogue_hook": "Next thing I knew I was 70 miles away wrapped naked in a blanket shaking off a meth high.",
+      "meme_caption": "Sprint planning gone\nwrong",
+      "news_hook": "When you try to estimate\nstory points",
+      "meme_score": 8,
+      "audience": "Engineers",
+      "why_it_works": "The absurdity of the line is funny, and the visual of the man in jail sells it."
+    },
+    {
+      "rank": 5,
+      "timestamp": "02:32",
+      "start_seconds": 152,
+      "duration_seconds": 12,
+      "what_happens_visually": "Erlich is holding a bong and says, 'At least the actual Judas had the courtesy to kill himself after betraying his leader, Jesus Christ'",
+      "dialogue_hook": "At least the actual Judas had the courtesy to kill himself after betraying his leader, Jesus Christ",
+      "meme_caption": "When your co-founder\nleaves for a FAANG",
+      "news_hook": "Is loyalty dead?",
+      "meme_score": 7,
+      "audience": "Founders",
+      "why_it_works": "The over-the-top reaction and religious comparison are funny, and relatable to the pain of losing a co-founder."
+    },
+    {
+      "rank": 6,
+      "timestamp": "03:15",
+      "start_seconds": 195,
+      "duration_seconds": 13,
+      "what_happens_visually": "Erlich opens the fridge, revealing a bunch of coconut water. He takes one and drinks it.",
+      "dialogue_hook": "Would you care for another coconut water? They are the most expensive unpasteurized variety.",
+      "meme_caption": "When the startup raises\nSeries A",
+      "news_hook": "Perks are a trap!",
+      "meme_score": 7,
+      "audience": "Engineers",
+      "why_it_works": "The visual of the fridge full of coconut water is funny, and relatable to the perks that come with a startup raising money."
+    },
+    {
+      "rank": 7,
+      "timestamp": "03:52",
+      "start_seconds": 232,
+      "duration_seconds": 13,
+      "what_happens_visually": "A man in a suit is giving a presentation with a bulldog sitting on the desk. He points to the bulldog and says, 'Look at that hideous face.'",
+      "dialogue_hook": "Look at that hideous face!\nAlright, get it out of here.",
+      "meme_caption": "Me reviewing my own\ncode",
+      "news_hook": "It's brutal out here",
+      "meme_score": 7,
+      "audience": "Engineers",
+      "why_it_works": "The juxtaposition of the man in a suit and the bulldog is funny, and relatable to the self-deprecating humor of engineers."
+    },
+    {
+      "rank": 8,
+      "timestamp": "04:41",
+      "start_seconds": 281,
+      "duration_seconds": 13,
+      "what_happens_visually": "The scene cuts to a fancy hotel. Richard is checking in with a black bag. He sees a man he knows.",
+      "dialogue_hook": "You here fucking?\nNo, no no fucking. Just here for the Vanity Fair dinner.",
+      "meme_caption": "When you're at a\nconference but you're single",
+      "news_hook": "The real reason to attend\nAI Dev World",
+      "meme_score": 7,
+      "audience": "Engineers",
+      "why_it_works": "The awkward exchange is funny, and relatable to the social dynamics of attending a conference."
+    }
+  ]
+}

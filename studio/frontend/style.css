@@ -435,6 +435,29 @@ textarea{min-height:72px}
 
 /* ── PUBLISHED TAB ───────────────────────────────────────────────── */
 .published-page{height:100%;overflow-y:auto;padding:28px 24px;max-width:960px;margin:0 auto;width:100%}
+
+/* Stats dashboard */
+.pub-stats{display:flex;gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);padding:16px 20px;text-align:center;flex:1}
+.stat-num{font-size:28px;font-weight:700;color:var(--coral)}
+.stat-label{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* Post button */
+.post-btn{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-bd)}
+.post-btn:hover{background:var(--coral);color:#fff}
+
+/* Post modal */
+.post-modal{position:fixed;inset:0;z-index:1001;display:flex;align-items:center;justify-content:center}
+.post-modal.hidden{display:none}
+.post-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.65)}
+.post-modal-inner{position:relative;z-index:1;background:var(--surface);border-radius:var(--r-l);padding:24px;min-width:320px;max-width:400px}
+.post-modal-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.post-modal-buttons{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.post-modal-btn{padding:12px;border-radius:var(--r-m);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;transition:all .15s;text-align:left;display:flex;align-items:center;gap:10px}
+.post-modal-btn:hover{border-color:var(--coral);background:var(--coral-bg)}
+.post-modal-btn .platform-icon{font-size:20px}
+.post-modal-cancel{background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;padding:8px}
+.post-modal-cancel:hover{color:var(--text)}
 .review-section{margin-bottom:32px}
 .section-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .count-badge{display:inline-flex;align-items:center;justify-content:center;

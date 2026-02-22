@@ -277,6 +277,11 @@
     <!-- ── PUBLISHED TAB ──────────────────────────────────────────── -->
     <div id="tab-published" class="tab-page">
       <div class="published-page">
+        <div id="pub-stats" class="pub-stats">
+          <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total clips</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-week">0</div><div class="stat-label">This week</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-today">0</div><div class="stat-label">Today</div></div>
+        </div>
         <div id="review-section" class="review-section hidden">
           <div class="section-header-row">
             <h3 class="section-title">Needs review <span id="review-count" class="count-badge">0</span></h3>
@@ -329,6 +334,29 @@
       <button class="btn btn-success" id="modal-approve">✓ Publish</button>
       <button class="btn btn-danger" id="modal-reject">✕ Reject</button>
     </div>
+  </div>
+</div>
+
+<!-- Post modal -->
+<div id="post-modal" class="post-modal hidden">
+  <div class="post-modal-backdrop" onclick="closePostModal()"></div>
+  <div class="post-modal-inner">
+    <div class="post-modal-title">Post to...</div>
+    <div class="post-modal-buttons">
+      <button class="post-modal-btn" onclick="doPost('tiktok')">
+        <span class="platform-icon">🎵</span>
+        <span>TikTok</span>
+      </button>
+      <button class="post-modal-btn" onclick="doPost('instagram')">
+        <span class="platform-icon">📷</span>
+        <span>Instagram</span>
+      </button>
+      <button class="post-modal-btn" onclick="doPost('both')">
+        <span class="platform-icon">🚀</span>
+        <span>Both platforms</span>
+      </button>
+    </div>
+    <button class="post-modal-cancel" onclick="closePostModal()">Cancel</button>
   </div>
 </div>
 
