@@ -1,22 +1,8 @@
-# Secrets
-.env
-
-# Large media files
-marketing_clips/
-reels_output/
-published/
+processing/*.mp3
+processing/*.wav
 studio/tmp/
-crowdlisten_demos/
-
-# Python
+studio/review/
 __pycache__/
 *.pyc
-*.pyo
-.venv/
-venv/
-
-# macOS
 .DS_Store
-
-# Processing outputs (large JSON + mp4s)
-processing/*.json
+.env
