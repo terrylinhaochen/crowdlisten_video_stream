@@ -131,10 +131,47 @@ function goToNarration() {
   showOnly('narration-page');
   S.hookClip=null;
   renderHookClip();
+  fetchHooks();
 }
 
 function pickHookClip() {
   goToClips('hook');
+}
+
+async function fetchHooks() {
+  try {
+    const data = await api('/api/clips?min_score=8');
+    renderHookLibrary(data.clips || []);
+  } catch(e) {
+    $('hook-library-list').innerHTML = '<div class="hook-lib-loading">Failed to load clips</div>';
+  }
+}
+
+function renderHookLibrary(clips) {
+  const el = $('hook-library-list');
+  if (!clips.length) { el.innerHTML = '<div class="hook-lib-loading">No high-score clips found</div>'; return; }
+  el.innerHTML = clips.map(c => {
+    const active = S.hookClip?.clip_id === c.clip_id ? ' hook-lib-card-active' : '';
+    const emoji = c.source_slug === 'office' ? '🏢' : '💻';
+    return `<div class="hook-lib-card${active}" onclick="selectHookClip('${c.clip_id}')">
+      <div class="hook-lib-video-wrap">
+        <video class="hook-lib-thumb" src="/api/clips/${c.clip_id}/preview" muted preload="none"
+          onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+        <div class="hook-lib-overlay">${emoji} <span class="hook-lib-score">${c.meme_score}</span></div>
+      </div>
+      <div class="hook-lib-caption">${esc(c.meme_caption||'')}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectHookClip(clipId) {
+  const clip = S.clips.find(c => c.clip_id === clipId);
+  if (!clip) return;
+  S.hookClip = clip;
+  renderHookClip();
+  renderHookLibrary(
+    (S.clips || []).filter(c => c.meme_score >= 8)
+  );
 }
 
 function handleClipsBack() {
@@ -204,15 +241,17 @@ function selectClip(clipId) {
 function renderHookClip() {
   const c=S.hookClip;
   if(!c){
-    $('hook-empty').classList.remove('hidden');
     $('hook-selected').classList.add('hidden');
     $('hook-caption-group').classList.add('hidden');
     return;
   }
-  $('hook-empty').classList.add('hidden');
   $('hook-selected').classList.remove('hidden');
   $('hook-caption-group').classList.remove('hidden');
-  $('hook-emoji').textContent=c.source_slug==='office'?'🏢':'💻';
+  // Video preview
+  const vid=$('hook-preview-video');
+  vid.src=`/api/clips/${c.clip_id}/preview`;
+  vid.load();
+  // Meta
   $('hook-source').textContent=c.source_label;
   $('hook-source').className='source-tag';
   $('hook-score').textContent=`${c.meme_score}/10`;

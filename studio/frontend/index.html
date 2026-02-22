@@ -178,18 +178,11 @@
 
           <!-- Right: Hook clip -->
           <div class="narration-right">
-            <div class="narr-section-label">Hook clip <span class="hint">— opens the video</span></div>
+            <div class="narr-section-label">Hook clip <span class="hint">— opens the video, then cuts to narration</span></div>
 
-            <!-- Empty state -->
-            <div id="hook-empty" class="hook-empty" onclick="pickHookClip()">
-              <div class="hook-empty-icon">🎬</div>
-              <div class="hook-empty-label">Pick a hook clip</div>
-              <div class="hook-empty-hint">Opens with this clip, then cuts to your narration</div>
-            </div>
-
-            <!-- Selected clip -->
+            <!-- Selected state -->
             <div id="hook-selected" class="hook-selected hidden">
-              <div class="hook-thumb" id="hook-emoji" onclick="pickHookClip()">🏢</div>
+              <video id="hook-preview-video" class="hook-preview-video" muted preload="metadata" loop></video>
               <div class="hook-info">
                 <div class="hook-top">
                   <span id="hook-source" class="source-tag"></span>
@@ -197,8 +190,15 @@
                   <span id="hook-ts" class="strip-ts"></span>
                 </div>
                 <div id="hook-caption-text" class="hook-caption-text"></div>
-                <button class="hook-change" onclick="pickHookClip()">Change clip →</button>
               </div>
+            </div>
+
+            <!-- Hook library (auto-populated, score ≥ 8) -->
+            <div class="hook-library">
+              <div id="hook-library-list" class="hook-library-list">
+                <div class="hook-lib-loading">Loading…</div>
+              </div>
+              <button class="hook-browse-all" onclick="pickHookClip()">Browse all clips →</button>
             </div>
 
             <!-- Hook caption -->
