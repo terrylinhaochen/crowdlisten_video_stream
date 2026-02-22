@@ -1,6 +1,6 @@
 """
 pipeline.py — Three video modes:
-  meme       → hook clip + caption only (no TTS, no CTA)
+  meme       → hook clip + caption + branded CTA card
   narration  → hook clip + voiceover body + branded CTA card
   cta_only   → standalone 5s branded CTA card
 
@@ -182,8 +182,8 @@ def add_silent_audio(video_path: str, duration: float) -> str:
 
 def render_meme(job_id: str, source_file: str, start_sec: int,
                 duration_sec: int, caption: str, output_name: str) -> str:
-    """Pure meme: clip + caption burned in. No TTS, no CTA."""
-    out = str(REVIEW_DIR / f"{output_name}.mp4")
+    """Meme clip with caption burned in (output to TMP for CTA concat)."""
+    out = str(TMP_DIR / f"meme_{job_id}.mp4")
 
     lines = auto_wrap(caption)
     fs = font_size_for(lines)
@@ -281,6 +281,27 @@ def render_body(job_id: str, script: str, audio_file: str,
     return out
 
 
+def concat_meme_cta(job_id: str, meme_file: str, cta_file: str, output_name: str) -> str:
+    """Concat meme clip + CTA card (2 segments, no body/TTS)."""
+    cta_with_audio = add_silent_audio(cta_file, 5.0)
+    out = str(REVIEW_DIR / f"{output_name}.mp4")
+    run_ff([
+        "-i", meme_file, "-i", cta_with_audio,
+        "-filter_complex",
+        "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]",
+        "-map", "[v]", "-map", "[a]",
+        "-c:v", "libx264", "-crf", "20", "-preset", "fast",
+        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
+        out,
+    ], job_id=job_id, step="assemble")
+    try:
+        os.remove(cta_with_audio)
+        os.remove(meme_file)
+    except Exception:
+        pass
+    return out
+
+
 def assemble(job_id: str, hook_file: str, body_file: str,
              cta_file: str, output_name: str) -> str:
     cta_with_audio = add_silent_audio(cta_file, 5.0)
@@ -339,11 +360,20 @@ def run_pipeline(job: dict) -> dict:
     try:
         if mode == "meme":
             sse.emit(job_id, "progress", {"step": "render", "pct": 0})
-            out = render_meme(
+            meme_file = render_meme(
                 job_id,
                 job["source_file"], job["start_sec"], job["duration_sec"],
                 job["hook_caption"], job["output_name"],
             )
+            sse.emit(job_id, "progress", {"step": "cta", "pct": 0})
+            cta_file = render_cta_card(
+                job_id,
+                job.get("cta_tagline", CTA_TAGLINE_DEFAULT),
+                job.get("cta_subtitle", CTA_SUBTITLE),
+            )
+            sse.emit(job_id, "progress", {"step": "assemble", "pct": 0})
+            out = concat_meme_cta(job_id, meme_file, cta_file, job["output_name"])
+            cleanup_tmp(job_id)
 
         elif mode == "cta_only":
             sse.emit(job_id, "progress", {"step": "cta", "pct": 0})

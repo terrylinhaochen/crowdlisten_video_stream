@@ -16,7 +16,7 @@ const S = {
   reviewFile: null,
 };
 
-const STEPS = { meme: ['render'], narration: ['hook','tts','body','cta','assemble'] };
+const STEPS = { meme: ['render','cta','assemble'], narration: ['hook','tts','body','cta','assemble'] };
 
 // ── Utils ─────────────────────────────────────────────────────────
 
