@@ -27,7 +27,7 @@
     <!-- ── CREATE TAB ─────────────────────────────────────────────── -->
     <div id="tab-create" class="tab-page active">
 
-      <!-- STEP 0: Landing input bar -->
+      <!-- STEP 0: Landing -->
       <div id="create-landing" class="create-landing">
         <div class="create-hero">
           <h1 class="create-title">What do you want to<br>create today?</h1>
@@ -42,15 +42,14 @@
 
         <div class="quick-chips">
           <button class="quick-chip" onclick="goToClips('meme')">🎭 Meme clip</button>
-          <button class="quick-chip" onclick="goToClips('narration')">🎙 Narration + CTA</button>
-          <button class="quick-chip chip-upload" onclick="goToUpload()">⬆ Upload new video</button>
+          <button class="quick-chip" onclick="goToNarration()">🎙 Narration + CTA</button>
         </div>
       </div>
 
-      <!-- STEP 1a: Clip browser -->
+      <!-- STEP 1a: Clip browser (Meme flow + hook clip picker for Narration) -->
       <div id="create-clips" class="create-clips hidden">
         <div class="clips-header">
-          <button class="back-btn" onclick="goToLanding()">← Back</button>
+          <button class="back-btn" id="clips-back-btn" onclick="handleClipsBack()">← Back</button>
           <div class="source-pills" id="source-pills">
             <button class="pill active" data-source="all">All</button>
             <button class="pill" data-source="office">The Office</button>
@@ -68,21 +67,102 @@
         </div>
       </div>
 
-      <!-- STEP 1b: Upload -->
-      <div id="create-upload" class="create-upload hidden">
-        <button class="back-btn" onclick="goToLanding()" style="align-self:flex-start">← Back</button>
-        <div class="upload-drop-zone" id="upload-drop"
-          onclick="document.getElementById('file-input').click()"
-          ondragover="event.preventDefault()"
-          ondrop="event.preventDefault();uploadFile(event.dataTransfer.files[0])">
-          <div class="upload-drop-icon">⬆</div>
-          <div class="upload-drop-label">Drop a video here, or click to browse</div>
-          <div class="upload-drop-hint">Gemini will analyze and extract clips automatically</div>
+      <!-- STEP 1b: Narration / script page -->
+      <div id="narration-page" class="narration-page hidden">
+
+        <div class="narration-header">
+          <button class="back-btn" onclick="goToLanding()">← Back</button>
+          <span class="narration-title">🎙 Narration + CTA</span>
+          <button class="btn btn-primary btn-render" id="narr-render-btn" onclick="submitNarration()">
+            🚀 Render
+          </button>
         </div>
-        <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
+
+        <div class="narration-body">
+
+          <!-- Left: Script + voice -->
+          <div class="narration-left">
+
+            <div class="narr-section">
+              <div class="narr-section-label">Script <span class="hint" id="narr-word-count"></span></div>
+              <textarea id="narr-script" class="narr-script-input" rows="8"
+                placeholder="Write your narration here. Aim for 15–25 seconds — that's about 40–65 words.&#10;&#10;This plays over a dark background after the hook clip."
+                oninput="updateNarrWordCount()"></textarea>
+            </div>
+
+            <div class="narr-row">
+              <div class="narr-section" style="flex:1">
+                <div class="narr-section-label">Voice</div>
+                <select id="narr-voice-select">
+                  <optgroup label="OpenAI">
+                    <option value="shimmer">shimmer</option>
+                    <option value="alloy">alloy</option>
+                    <option value="echo">echo</option>
+                    <option value="nova">nova</option>
+                    <option value="fable">fable</option>
+                    <option value="onyx">onyx</option>
+                  </optgroup>
+                  <optgroup label="ElevenLabs">
+                    <option value="Rachel">Rachel</option>
+                    <option value="Bella">Bella</option>
+                    <option value="Adam">Adam</option>
+                  </optgroup>
+                </select>
+              </div>
+              <button class="btn btn-secondary" id="narr-tts-btn" onclick="generateNarrTTS()" style="align-self:flex-end">
+                🎤 Generate voice
+              </button>
+            </div>
+
+            <div id="narr-audio-preview" class="audio-preview hidden"></div>
+
+            <div class="cta-pill">
+              📣 Auto-appended · <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
+            </div>
+
+            <div class="narr-section">
+              <div class="narr-section-label">Output filename</div>
+              <input type="text" id="narr-output-name" placeholder="auto-filled from script"/>
+            </div>
+
+          </div>
+
+          <!-- Right: Hook clip -->
+          <div class="narration-right">
+            <div class="narr-section-label">Hook clip <span class="hint">— opens the video</span></div>
+
+            <!-- Empty state -->
+            <div id="hook-empty" class="hook-empty" onclick="pickHookClip()">
+              <div class="hook-empty-icon">🎬</div>
+              <div class="hook-empty-label">Pick a hook clip</div>
+              <div class="hook-empty-hint">Opens with this clip, then cuts to your narration</div>
+            </div>
+
+            <!-- Selected clip -->
+            <div id="hook-selected" class="hook-selected hidden">
+              <div class="hook-thumb" id="hook-emoji" onclick="pickHookClip()">🏢</div>
+              <div class="hook-info">
+                <div class="hook-top">
+                  <span id="hook-source" class="source-tag"></span>
+                  <span id="hook-score" class="score-badge"></span>
+                  <span id="hook-ts" class="strip-ts"></span>
+                </div>
+                <div id="hook-caption-text" class="hook-caption-text"></div>
+                <button class="hook-change" onclick="pickHookClip()">Change clip →</button>
+              </div>
+            </div>
+
+            <!-- Hook caption -->
+            <div id="hook-caption-group" class="narr-section hidden">
+              <div class="narr-section-label">Hook caption</div>
+              <textarea id="narr-hook-caption" rows="2" placeholder="Caption shown over the hook clip…"></textarea>
+            </div>
+
+          </div>
+        </div>
       </div>
 
-      <!-- STEP 2: Composer -->
+      <!-- STEP 2: Meme composer (after clip selected from meme flow) -->
       <div id="composer-view" class="composer-view hidden">
 
         <div id="clip-strip" class="clip-strip">
@@ -102,55 +182,10 @@
           <button class="strip-change" onclick="clearClipSelection()">← All clips</button>
         </div>
 
-        <div class="type-toggle">
-          <button class="type-btn active" data-type="meme" onclick="setType('meme')">🎭 Meme</button>
-          <button class="type-btn" data-type="narration" onclick="setType('narration')">🎙 Narration + CTA</button>
-        </div>
-
-        <div id="fields-meme" class="compose-fields">
+        <div class="compose-fields">
           <div class="field-group">
             <label>Caption <span class="hint">— burned into the clip</span></label>
             <textarea id="meme-caption" rows="3" placeholder="When your PM adds one more thing to the sprint…"></textarea>
-          </div>
-        </div>
-
-        <div id="fields-narration" class="compose-fields hidden">
-          <div class="field-group">
-            <label>Hook caption</label>
-            <textarea id="narr-caption" rows="2" placeholder="Caption for the opening clip…"></textarea>
-          </div>
-          <div class="field-group">
-            <label>Narration script <span class="hint" id="word-count-hint"></span></label>
-            <textarea id="narr-script" rows="5"
-              placeholder="Write 15–25 seconds of narration here…"
-              oninput="updateWordCount()"></textarea>
-          </div>
-          <div class="tts-row">
-            <div class="field-group" style="flex:1">
-              <label>Voice</label>
-              <select id="voice-select">
-                <optgroup label="OpenAI">
-                  <option value="shimmer">shimmer</option>
-                  <option value="alloy">alloy</option>
-                  <option value="echo">echo</option>
-                  <option value="nova">nova</option>
-                  <option value="fable">fable</option>
-                  <option value="onyx">onyx</option>
-                </optgroup>
-                <optgroup label="ElevenLabs">
-                  <option value="Rachel">Rachel</option>
-                  <option value="Bella">Bella</option>
-                  <option value="Adam">Adam</option>
-                </optgroup>
-              </select>
-            </div>
-            <button class="btn btn-secondary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">
-              🎤 Generate voice
-            </button>
-          </div>
-          <div id="audio-preview" class="audio-preview hidden"></div>
-          <div class="cta-pill">
-            📣 CTA auto-appended · <strong>Try CrowdListen now</strong> — the PM for AI Agents · crowdlisten.com
           </div>
         </div>
 
@@ -162,6 +197,9 @@
         </div>
 
       </div><!-- /composer-view -->
+
+      <!-- Hidden file input for upload -->
+      <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
 
     </div><!-- /tab-create -->
 

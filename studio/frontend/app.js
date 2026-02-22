@@ -3,9 +3,12 @@
 const S = {
   tab: 'create',
   clips: [], filters: { source: 'all', minScore: 7, query: '' },
-  selected: null,
+  selected: null,        // selected clip (meme flow)
+  hookClip: null,        // selected hook clip (narration flow)
+  clipPickerMode: 'meme',// 'meme' | 'hook'
   videoType: 'meme',
   ttsAudio: null,
+  narrTtsAudio: null,
   activeTasks: {},
   jobs: [],
   review: [],
@@ -91,35 +94,46 @@ function connectSSE() {
 
 // ── Landing routing ───────────────────────────────────────────────
 
+function showOnly(id) {
+  ['create-landing','create-clips','narration-page','composer-view']
+    .forEach(x => $( x).classList.toggle('hidden', x!==id));
+}
+
 function handleLandingSubmit() {
   const q=$('landing-input').value.trim();
-  if(!q || q.toLowerCase().includes('upload')) { goToUpload(); return; }
+  if(!q){ goToClips('meme'); return; }
   S.filters.query=q;
-  goToClips();
+  goToClips('meme');
 }
 
 function goToClips(mode) {
-  if(mode) { S.videoType=mode; }
+  S.clipPickerMode = mode==='hook' ? 'hook' : 'meme';
+  if(mode && mode!=='hook') S.videoType=mode;
   $('create-landing').classList.add('hidden');
-  $('create-upload').classList.add('hidden');
-  $('create-clips').classList.remove('hidden');
+  $('narration-page').classList.add('hidden');
   $('composer-view').classList.add('hidden');
+  $('create-clips').classList.remove('hidden');
   fetchClips();
 }
 
-function goToUpload() {
-  $('create-landing').classList.add('hidden');
-  $('create-clips').classList.add('hidden');
-  $('create-upload').classList.remove('hidden');
-  $('composer-view').classList.add('hidden');
+function goToNarration() {
+  showOnly('narration-page');
+  S.hookClip=null;
+  renderHookClip();
+}
+
+function pickHookClip() {
+  goToClips('hook');
+}
+
+function handleClipsBack() {
+  if(S.clipPickerMode==='hook') { showOnly('narration-page'); }
+  else { goToLanding(); }
 }
 
 function goToLanding() {
-  $('create-landing').classList.remove('hidden');
-  $('create-clips').classList.add('hidden');
-  $('create-upload').classList.add('hidden');
-  $('composer-view').classList.add('hidden');
-  S.selected=null; S.filters.query='';
+  S.selected=null; S.filters.query=''; S.clipPickerMode='meme';
+  showOnly('create-landing');
 }
 
 // ── Clips ─────────────────────────────────────────────────────────
@@ -160,24 +174,51 @@ function renderClipList() {
 }
 
 function selectClip(clipId) {
-  S.selected=S.clips.find(c=>c.clip_id===clipId)||null;
-  if(!S.selected) return;
-  renderClipList();
-  showComposer();
+  const clip=S.clips.find(c=>c.clip_id===clipId)||null;
+  if(!clip) return;
+  if(S.clipPickerMode==='hook') {
+    S.hookClip=clip;
+    renderHookClip();
+    showOnly('narration-page');
+  } else {
+    S.selected=clip;
+    renderClipList();
+    showComposer();
+  }
+}
+
+function renderHookClip() {
+  const c=S.hookClip;
+  if(!c){
+    $('hook-empty').classList.remove('hidden');
+    $('hook-selected').classList.add('hidden');
+    $('hook-caption-group').classList.add('hidden');
+    return;
+  }
+  $('hook-empty').classList.add('hidden');
+  $('hook-selected').classList.remove('hidden');
+  $('hook-caption-group').classList.remove('hidden');
+  $('hook-emoji').textContent=c.source_slug==='office'?'🏢':'💻';
+  $('hook-source').textContent=c.source_label;
+  $('hook-source').className='source-tag';
+  $('hook-score').textContent=`${c.meme_score}/10`;
+  $('hook-score').className=`score-badge ${scoreClass(c.meme_score)}`;
+  $('hook-ts').textContent=`@${c.timestamp}`;
+  $('hook-caption-text').textContent=c.meme_caption||'';
+  if(!$('narr-hook-caption').value) $('narr-hook-caption').value=c.meme_caption||'';
+  if(!$('narr-output-name').value) $('narr-output-name').value=slugify(c.meme_caption||c.clip_id);
 }
 
 function clearClipSelection() {
   S.selected=null;
   S.ttsAudio=null;
   renderClipList();
-  $('composer-view').classList.add('hidden');
-  $('create-clips').classList.remove('hidden');
+  showOnly('create-clips');
 }
 
 function showComposer() {
   const c=S.selected;
-  $('create-clips').classList.add('hidden');
-  $('composer-view').classList.remove('hidden');
+  showOnly('composer-view');
 
   // Strip
   $('strip-emoji').textContent=c.source_slug==='office'?'🏢':'💻';
@@ -189,15 +230,9 @@ function showComposer() {
   $('strip-dur').textContent=`${c.duration_seconds}s`;
   $('strip-visual').textContent=c.what_happens_visually;
 
-  // Pre-fill captions
+  // Pre-fill
   $('meme-caption').value=c.meme_caption||'';
-  if($('narr-caption')) $('narr-caption').value=c.meme_caption||'';
   $('output-name').value=slugify(c.meme_caption||c.clip_id);
-
-  // Reset TTS
-  S.ttsAudio=null;
-  $('audio-preview').classList.add('hidden');
-  $('audio-preview').innerHTML='';
 }
 
 // Filters
@@ -213,70 +248,75 @@ $('score-slider').addEventListener('input',function(){
   fetchClips();
 });
 
-// ── Video type ────────────────────────────────────────────────────
+// ── Narration page ────────────────────────────────────────────────
 
-function setType(type) {
-  S.videoType=type;
-  document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
-  $('fields-meme').classList.toggle('hidden',type!=='meme');
-  $('fields-narration').classList.toggle('hidden',type!=='narration');
-}
-
-function updateWordCount() {
+function updateNarrWordCount() {
   const t=$('narr-script').value;
-  $('word-count-hint').textContent=`≈ ${estSecs(t)}s · ${wc(t)} words`;
+  $('narr-word-count').textContent=`≈ ${estSecs(t)}s · ${wc(t)} words`;
 }
 
-// ── TTS ───────────────────────────────────────────────────────────
-
-async function generateTTS() {
+async function generateNarrTTS() {
   const script=$('narr-script').value.trim();
   if(!script){toast('Write a narration script first','error');return;}
-  const btn=$('tts-btn');
+  const btn=$('narr-tts-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating…';
   try {
-    const voice=$('voice-select').value;
+    const voice=$('narr-voice-select').value;
     const provider=['Rachel','Bella','Adam','Antoni'].includes(voice)?'elevenlabs':'openai';
-    S.ttsAudio=await api('/api/tts',{method:'POST',body:JSON.stringify({script,voice,provider})});
-    const el=$('audio-preview');
+    S.narrTtsAudio=await api('/api/tts',{method:'POST',body:JSON.stringify({script,voice,provider})});
+    const el=$('narr-audio-preview');
     el.classList.remove('hidden');
-    el.innerHTML=`<audio controls src="${S.ttsAudio.audio_url}"></audio><div class="audio-dur">⏱ ${S.ttsAudio.duration}s</div>`;
-    toast(`Voice ready — ${S.ttsAudio.duration}s`);
+    el.innerHTML=`<audio controls src="${S.narrTtsAudio.audio_url}"></audio><div class="audio-dur">⏱ ${S.narrTtsAudio.duration}s</div>`;
+    toast(`Voice ready — ${S.narrTtsAudio.duration}s`);
   } catch(e){toast(`TTS failed: ${e.message}`,'error');}
   finally{btn.disabled=false;btn.textContent='🎤 Generate voice';}
+}
+
+async function submitNarration() {
+  if(!S.hookClip){toast('Pick a hook clip first','error');return;}
+  const script=$('narr-script').value.trim();
+  if(!script){toast('Write a narration script first','error');return;}
+  const outputName=$('narr-output-name').value.trim()||slugify(script.slice(0,40));
+  const body={
+    mode:'narration',output_name:outputName,
+    hook_clip_id:S.hookClip.clip_id,
+    hook_caption:$('narr-hook-caption').value,
+    body_script:script,
+    body_audio_file:S.narrTtsAudio?.audio_file||null,
+    voice:$('narr-voice-select').value,
+    provider:['Rachel','Bella','Adam','Antoni'].includes($('narr-voice-select').value)?'elevenlabs':'openai',
+  };
+  const btn=$('narr-render-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
+  try {
+    const job=await api('/api/render',{method:'POST',body:JSON.stringify(body)});
+    S.jobs.unshift(job);
+    S.activeTasks[job.id]={name:outputName,mode:'narration',steps:{}};
+    renderActiveTasks();updateQueueBadge();
+    toast('Added to queue!');
+    switchTab('queue');
+  } catch(e){toast(`Failed: ${e.message}`,'error');}
+  finally{btn.disabled=false;btn.textContent='🚀 Render';}
 }
 
 // ── Render ────────────────────────────────────────────────────────
 
 async function submitRender() {
+  if(!S.selected){toast('Select a clip first','error');return;}
   const outputName=$('output-name').value.trim();
   if(!outputName){toast('Set an output filename','error');return;}
-
-  const body={mode:S.videoType,output_name:outputName};
-
-  if(S.videoType==='meme'){
-    if(!S.selected){toast('Select a clip first','error');return;}
-    body.hook_clip_id=S.selected.clip_id;
-    body.hook_caption=$('meme-caption').value;
-  } else {
-    if(!S.selected){toast('Select a clip first','error');return;}
-    if(!$('narr-script').value.trim()){toast('Write a narration script first','error');return;}
-    body.hook_clip_id=S.selected.clip_id;
-    body.hook_caption=$('narr-caption').value;
-    body.body_script=$('narr-script').value;
-    body.body_audio_file=S.ttsAudio?.audio_file||null;
-    body.voice=$('voice-select').value;
-    body.provider=['Rachel','Bella','Adam','Antoni'].includes(body.voice)?'elevenlabs':'openai';
-  }
-
+  const body={
+    mode:'meme',output_name:outputName,
+    hook_clip_id:S.selected.clip_id,
+    hook_caption:$('meme-caption').value,
+  };
   const btn=$('render-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   try {
     const job=await api('/api/render',{method:'POST',body:JSON.stringify(body)});
     S.jobs.unshift(job);
-    S.activeTasks[job.id]={name:outputName,mode:S.videoType,steps:{}};
-    renderActiveTasks();
-    updateQueueBadge();
+    S.activeTasks[job.id]={name:outputName,mode:'meme',steps:{}};
+    renderActiveTasks();updateQueueBadge();
     toast('Added to queue!');
     switchTab('queue');
   } catch(e){toast(`Failed: ${e.message}`,'error');}
