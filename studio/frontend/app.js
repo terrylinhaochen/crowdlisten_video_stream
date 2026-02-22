@@ -54,6 +54,7 @@ function switchTab(name) {
   S.tab=name;
   if(name==='queue') renderQueue();
   if(name==='published'){fetchReview();fetchPublished();}
+  if(name==='create'){fetchSources();}
 }
 
 // ── SSE ───────────────────────────────────────────────────────────
@@ -466,16 +467,59 @@ function renderPublished() {
   $('daily-tracker').textContent=`${today_count} / ${daily_target} today`;
   const el=$('published-grid');
   if(!videos.length){el.innerHTML='<div class="empty-state">No published videos yet</div>';return;}
-  el.innerHTML=videos.map(v=>`
-    <div class="video-card">
-      <video class="video-thumb" src="${v.url}" muted preload="metadata"
-        onclick="openModal('${v.url}',false)" title="Preview"></video>
-      <div class="video-card-body">
-        <div class="video-name" title="${esc(v.filename)}">${esc(v.filename)}</div>
-        <div class="video-meta">${v.size_mb}MB · ${relTime(v.created_at)}</div>
-        <div class="video-actions">
-          <a class="btn btn-secondary btn-sm" href="${v.url}" download="${esc(v.filename)}">↓ Download</a>
-        </div>
+
+  // Group by folder
+  const groups={};
+  videos.forEach(v=>{
+    const g=v.folder||'studio';
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(v);
+  });
+
+  const folderLabels={'studio':'Studio renders','2.21_publish':'Feb 21 batch','2.21':'Feb 21 archive'};
+  el.innerHTML=Object.entries(groups).map(([folder,vids])=>`
+    <div class="folder-group">
+      <div class="folder-label">
+        <span class="folder-icon">📁</span>
+        <span>${folderLabels[folder]||folder}</span>
+        <span class="folder-count">${vids.length}</span>
+      </div>
+      <div class="video-grid-inner">
+        ${vids.map(v=>`
+          <div class="video-card">
+            <video class="video-thumb" src="${v.url}" muted preload="metadata"
+              onclick="openModal('${v.url}',false)" title="Preview"></video>
+            <div class="video-card-body">
+              <div class="video-name" title="${esc(v.filename)}">${esc(v.filename)}</div>
+              <div class="video-meta">${v.size_mb}MB · ${relTime(v.created_at)}</div>
+              <div class="video-actions">
+                <a class="btn btn-secondary btn-sm" href="${v.url}" download="${esc(v.filename)}">↓ Download</a>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function fetchSources() {
+  try {
+    const data = await api('/api/sources');
+    renderSources(data.sources||[]);
+  } catch(e){}
+}
+
+function renderSources(sources) {
+  const el=$('sources-list');
+  if(!el) return;
+  if(!sources.length){el.innerHTML='<div class="source-empty">No source videos found</div>';return;}
+  el.innerHTML=sources.map(s=>`
+    <div class="source-row">
+      <div class="source-info">
+        <span class="source-name">${esc(s.filename)}</span>
+        <span class="source-size">${s.size_mb}MB</span>
+      </div>
+      <div class="source-status ${s.analyzed?'analyzed':'not-analyzed'}">
+        ${s.analyzed ? `✓ ${s.clip_count} clips` : '⬤ not analyzed'}
       </div>
     </div>`).join('');
 }
@@ -550,4 +594,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   fetchJobs();
   fetchPublished();
   fetchReview();
+  fetchSources();
 });

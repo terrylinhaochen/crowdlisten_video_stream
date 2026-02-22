@@ -408,6 +408,43 @@ textarea{min-height:72px}
 .daily-tracker{font-size:13px;color:var(--text2);font-weight:500}
 .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:32px}
 
+/* Folder groups (published tab) */
+.folder-group{margin-bottom:32px}
+.folder-label{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+  font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;
+}
+.folder-icon{font-size:14px}
+.folder-count{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text3);border-radius:var(--pill);padding:1px 8px;font-size:11px;font-weight:500;
+}
+.video-grid-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+
+/* Sources panel (upload view) */
+.sources-panel{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-l);overflow:hidden;
+}
+.sources-title{
+  padding:12px 16px;font-size:12px;font-weight:600;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.6px;
+  border-bottom:1px solid var(--border);background:var(--surface2);
+}
+.sources-list{display:flex;flex-direction:column}
+.source-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.source-row:last-child{border-bottom:none}
+.source-info{display:flex;align-items:center;gap:10px}
+.source-name{font-size:13px;font-weight:500;color:var(--text)}
+.source-size{font-size:11px;color:var(--text3)}
+.source-status{font-size:12px;font-weight:500;padding:3px 10px;border-radius:var(--pill)}
+.source-status.analyzed{background:var(--green-bg);color:#16A34A}
+.source-status.not-analyzed{background:var(--surface2);color:var(--text3)}
+.source-empty{padding:12px 16px;font-size:13px;color:var(--text3)}
+
 .video-card{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);
   overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow .2s;

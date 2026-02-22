@@ -261,27 +261,66 @@ def list_published():
     today_count = 0
 
     if PUBLISHED_DIR.exists():
-        for mp4 in sorted(PUBLISHED_DIR.glob("*.mp4"), key=lambda f: f.stat().st_mtime, reverse=True):
+        all_vids = sorted(
+            [f for f in PUBLISHED_DIR.rglob("*") if f.suffix.lower() == ".mp4" and f.is_file()],
+            key=lambda f: f.stat().st_mtime, reverse=True,
+        )
+        for mp4 in all_vids:
+            rel = mp4.relative_to(PUBLISHED_DIR)
+            folder = str(rel.parent) if str(rel.parent) != "." else "studio"
             mtime = datetime.fromtimestamp(mp4.stat().st_mtime, tz=timezone.utc)
             size_mb = round(mp4.stat().st_size / 1024 / 1024, 1)
             if mtime.date() == today:
                 today_count += 1
             videos.append({
                 "filename": mp4.name,
+                "rel_path": str(rel),
+                "folder": folder,
                 "size_mb": size_mb,
                 "created_at": mtime.isoformat(),
-                "url": f"/api/published/{mp4.name}",
+                "url": f"/api/published/{str(rel)}",
             })
 
     return {"videos": videos, "today_count": today_count, "daily_target": 2}
 
 
-@app.get("/api/published/{filename}")
-def serve_published(filename: str):
-    path = PUBLISHED_DIR / filename
+@app.get("/api/published/{rel_path:path}")
+def serve_published(rel_path: str):
+    path = (PUBLISHED_DIR / rel_path).resolve()
+    if not str(path).startswith(str(PUBLISHED_DIR.resolve())):
+        raise HTTPException(403, "Forbidden")
     if not path.exists():
         raise HTTPException(404, "Video not found")
     return FileResponse(str(path), media_type="video/mp4")
+
+
+@app.get("/api/sources")
+def list_sources():
+    """List source videos and their analysis state."""
+    from .config import PROCESSING_DIR
+    sources = []
+    if MARKETING_CLIPS_DIR.exists():
+        for vid in sorted(MARKETING_CLIPS_DIR.glob("*")):
+            if vid.suffix.lower() not in (".mp4", ".mov", ".avi", ".mkv"):
+                continue
+            stem = vid.stem
+            analyzed = (PROCESSING_DIR / f"{stem}_visual_analysis.json").exists()
+            clip_count = 0
+            if analyzed:
+                import json as _json
+                try:
+                    data = _json.loads((PROCESSING_DIR / f"{stem}_visual_analysis.json").read_text())
+                    clip_count = len(data.get("clips", []))
+                except Exception:
+                    pass
+            sources.append({
+                "filename": vid.name,
+                "stem": stem,
+                "size_mb": round(vid.stat().st_size / 1024 / 1024, 1),
+                "analyzed": analyzed,
+                "clip_count": clip_count,
+            })
+    return {"sources": sources}
 
 
 # ── Intake ────────────────────────────────────────────────────────────────────
