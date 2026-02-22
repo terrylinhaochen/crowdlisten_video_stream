@@ -68,6 +68,30 @@ def clip_video(clip_id: str):
     return FileResponse(str(mp4), media_type="video/mp4")
 
 
+@app.get("/api/clips/{clip_id}/preview")
+def clip_preview(clip_id: str):
+    """Raw clip cut from source — no caption, no processing. Cached in tmp/."""
+    import subprocess
+    cached = TMP_DIR / f"preview_{clip_id}.mp4"
+    if not cached.exists():
+        clip = clip_lib.get_clip(clip_id)
+        if not clip:
+            raise HTTPException(404, "Clip not found")
+        r = subprocess.run([
+            "ffmpeg", "-y",
+            "-ss", str(clip["start_seconds"]),
+            "-i", clip["source_file"],
+            "-t", str(clip["duration_seconds"]),
+            "-vf", "scale=540:-2",   # half-res for fast preview
+            "-c:v", "libx264", "-crf", "28", "-preset", "ultrafast",
+            "-c:a", "aac", "-b:a", "64k",
+            str(cached),
+        ], capture_output=True)
+        if r.returncode != 0:
+            raise HTTPException(500, "Preview generation failed")
+    return FileResponse(str(cached), media_type="video/mp4")
+
+
 @app.get("/api/clips/{clip_id}/thumbnail")
 def clip_thumbnail(clip_id: str):
     """Generate or return cached thumbnail."""

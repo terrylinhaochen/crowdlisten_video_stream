@@ -78,7 +78,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .clip-thumb{width:100%;aspect-ratio:9/16;max-height:160px;object-fit:cover;
   background:var(--card2);display:block;position:relative}
 .clip-thumb-placeholder{width:100%;height:120px;background:var(--card2);
-  display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;color:var(--text3);transition:background .15s;position:relative}
+.clip-thumb-placeholder:hover{background:#2a2a2a}
+.thumb-play{font-size:20px;color:var(--text2);opacity:.6}.clip-thumb-placeholder:hover .thumb-play{opacity:1;color:var(--accent)}
 .clip-card-body{padding:10px 12px}
 .clip-card-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .score-badge{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;color:#fff}

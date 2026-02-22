@@ -195,7 +195,10 @@ function renderClipGrid() {
     const sel = S.selectedClip?.clip_id === c.clip_id ? ' selected' : '';
     return `
       <div class="clip-card${sel}" onclick="selectClip('${c.clip_id}')">
-        <div class="clip-thumb-placeholder">${c.source_slug==='office'?'🏢':'💻'}</div>
+        <div class="clip-thumb-placeholder" onclick="event.stopPropagation(); openModal('/api/clips/${c.clip_id}/preview', false)" title="▶ Preview">
+        <span style="font-size:32px">${c.source_slug==='office'?'🏢':'💻'}</span>
+        <span class="thumb-play">▶</span>
+      </div>
         <div class="clip-card-body">
           <div class="clip-card-top">
             <span class="score-badge ${scoreClass(c.meme_score)}">${c.meme_score}/10</span>
@@ -244,7 +247,8 @@ function updateSelectedClipCard() {
   $('sel-timestamp').textContent = `@${c.timestamp}`;
   $('sel-duration').textContent = `${c.duration_seconds}s`;
   $('sel-visual').textContent = c.what_happens_visually;
-  $('preview-clip-btn').disabled = !c.rendered;
+  $('preview-clip-btn').disabled = false;
+  $('preview-clip-btn').title = 'Preview clip (first load takes ~5s to cut)';
 }
 
 // Source pills
@@ -301,8 +305,8 @@ function updateCtaPreview() {
 }
 
 function previewSelectedClip() {
-  if (!S.selectedClip?.rendered) return;
-  openModal(`/api/clips/${S.selectedClip.clip_id}/video`, false);
+  if (!S.selectedClip) return;
+  openModal(`/api/clips/${S.selectedClip.clip_id}/preview`, false);
 }
 
 // ── TTS ───────────────────────────────────────────────────────────────────
@@ -541,9 +545,16 @@ function renderQueue() {
 
 function openModal(src, showActions) {
   const modal = $('video-modal');
-  $('modal-video').src = src;
-  $('modal-actions').classList.toggle('hidden', !showActions);
+  const video = $('modal-video');
+  video.src = '';
   modal.classList.remove('hidden');
+  $('modal-actions').classList.toggle('hidden', !showActions);
+  // Show loading state, then load video
+  video.poster = '';
+  video.style.opacity = '0.3';
+  video.src = src;
+  video.oncanplay = () => { video.style.opacity = '1'; };
+  video.onerror = () => { video.style.opacity='1'; toast('Preview failed — try again in a moment', 'error'); };
 }
 
 function closeModal() {
