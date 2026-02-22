@@ -5,7 +5,6 @@ import uuid
 from datetime import datetime, timezone
 from .config import QUEUE_FILE
 
-
 _lock = threading.Lock()
 
 
@@ -29,11 +28,11 @@ def save_queue(jobs: list[dict]):
         QUEUE_FILE.write_text(json.dumps(jobs, indent=2))
 
 
-def add_job(job_dict: dict) -> dict:
+def add_job(job: dict) -> dict:
     jobs = load_queue()
-    jobs.append(job_dict)
+    jobs.append(job)
     save_queue(jobs)
-    return job_dict
+    return job
 
 
 def update_job(job_id: str, updates: dict) -> dict | None:
@@ -63,11 +62,16 @@ def remove_job(job_id: str) -> bool:
 
 
 def build_job(
+    mode: str,
     hook_clip_id: str,
     hook_caption: str,
     body_script: str,
     body_audio_file: str | None,
+    voice: str,
+    provider: str,
     cta_tagline: str,
+    cta_subtitle: str,
+    cta_url: str,
     output_name: str,
     source_file: str,
     start_sec: int,
@@ -76,6 +80,7 @@ def build_job(
     return {
         "id": str(uuid.uuid4()),
         "status": "queued",
+        "mode": mode,
         "created_at": _now(),
         "completed_at": None,
         "error": None,
@@ -83,7 +88,11 @@ def build_job(
         "hook_caption": hook_caption,
         "body_script": body_script,
         "body_audio_file": body_audio_file,
+        "voice": voice,
+        "provider": provider,
         "cta_tagline": cta_tagline,
+        "cta_subtitle": cta_subtitle,
+        "cta_url": cta_url,
         "output_name": output_name,
         "source_file": source_file,
         "start_sec": start_sec,
@@ -92,8 +101,6 @@ def build_job(
 
 
 def start_processor():
-    """Start the background queue processor thread."""
-
     def _process():
         while True:
             time.sleep(2)
@@ -101,22 +108,13 @@ def start_processor():
             queued = [j for j in jobs if j["status"] == "queued"]
             if not queued:
                 continue
-
             job = queued[0]
             update_job(job["id"], {"status": "rendering"})
             try:
-                # Import lazily to avoid circular imports at startup
                 from .pipeline import run_pipeline
                 run_pipeline(job)
-                update_job(
-                    job["id"],
-                    {"status": "done", "completed_at": _now()},
-                )
+                update_job(job["id"], {"status": "review", "completed_at": _now()})
             except Exception as exc:
-                update_job(
-                    job["id"],
-                    {"status": "failed", "error": str(exc), "completed_at": _now()},
-                )
+                update_job(job["id"], {"status": "failed", "error": str(exc), "completed_at": _now()})
 
-    t = threading.Thread(target=_process, daemon=True)
-    t.start()
+    threading.Thread(target=_process, daemon=True).start()

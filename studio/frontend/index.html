@@ -1,96 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>CrowdListen Studio</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header id="header">
-      <div class="header-left">
-        <span class="logo-text">CrowdListen <span class="logo-accent">Studio</span></span>
-      </div>
-      <div class="header-right">
-        <span id="header-status" class="status-dot"></span>
-        <span id="header-status-text" class="status-text">Ready</span>
-      </div>
-    </header>
+<div id="app">
 
-    <!-- Main layout -->
-    <div id="main">
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <span class="logo">CrowdListen <span class="logo-accent">Studio</span></span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="intake">📥 Intake</button>
+      <button class="tab" data-tab="library">📚 Library</button>
+      <button class="tab" data-tab="compose">✏️ Compose</button>
+      <button class="tab" data-tab="review">👁 Review <span id="review-badge" class="tab-badge hidden">0</span></button>
+      <button class="tab" data-tab="published">📤 Published</button>
+    </nav>
+    <div class="header-right">
+      <span id="tasks-summary" class="tasks-summary"></span>
+    </div>
+  </header>
 
-      <!-- Panel 1: Library -->
-      <aside id="panel-library">
-        <div class="panel-header">
-          <span>Clip Library</span>
-          <button class="icon-btn" id="refresh-btn" title="Refresh clips">↻</button>
+  <!-- Main -->
+  <div id="main">
+
+    <!-- Tab pages -->
+    <div id="tab-content">
+
+      <!-- INTAKE -->
+      <div id="tab-intake" class="tab-page active">
+        <div class="page-inner">
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-icon">🎥</div>
+            <p class="drop-title">Drop a video to add to your library</p>
+            <p class="drop-sub">MP4 · MOV · AVI — Gemini will auto-analyze it</p>
+            <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files</button>
+            <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFileSelect(this)"/>
+          </div>
+          <div id="intake-history" class="intake-history"></div>
         </div>
+      </div>
 
-        <div class="filters">
+      <!-- LIBRARY -->
+      <div id="tab-library" class="tab-page">
+        <div class="library-filters">
           <div class="source-pills" id="source-pills">
             <button class="pill active" data-source="all">All</button>
-            <button class="pill" data-source="office">Office</button>
+            <button class="pill" data-source="office">The Office</button>
             <button class="pill" data-source="sv1">SV1</button>
             <button class="pill" data-source="sv2">SV2</button>
             <button class="pill" data-source="sv3">SV3</button>
           </div>
-          <div class="score-filter">
-            <label>Min score: <span id="score-val">7</span></label>
-            <input type="range" id="score-slider" min="1" max="10" value="7" />
+          <div class="filter-right">
+            <label>Min score: <strong id="score-val">7</strong></label>
+            <input type="range" id="score-slider" min="1" max="10" value="7"/>
+            <button class="btn btn-sm btn-secondary" onclick="fetchClips()">↻ Refresh</button>
           </div>
         </div>
-
-        <div id="clip-list" class="clip-list">
-          <div class="empty-state">Loading clips...</div>
+        <div id="clip-grid" class="clip-grid">
+          <div class="loading-state">Loading clips…</div>
         </div>
-      </aside>
+      </div>
 
-      <!-- Panel 2: Composer -->
-      <main id="panel-composer">
-        <div class="panel-header">
-          <span>Composer</span>
-          <span id="composer-subtitle" class="panel-subtitle"></span>
-        </div>
-        <div id="composer-body">
-          <div class="empty-state composer-empty">
-            <div class="empty-icon">🎬</div>
-            <p>Select a clip from the library to get started</p>
+      <!-- COMPOSE -->
+      <div id="tab-compose" class="tab-page">
+        <div class="compose-inner">
+
+          <!-- Video type selector -->
+          <div class="video-type-bar">
+            <span class="type-label">Video type:</span>
+            <div class="type-buttons" id="type-buttons">
+              <button class="type-btn active" data-type="meme">🎭 Meme</button>
+              <button class="type-btn" data-type="narration">🎙 Narration</button>
+              <button class="type-btn" data-type="cta_only">📣 CTA Only</button>
+            </div>
           </div>
-        </div>
-      </main>
 
-      <!-- Panel 3: Queue + Published -->
-      <aside id="panel-right">
-        <div class="panel-header">
-          <span>Render Queue</span>
-          <span id="queue-count" class="badge">0</span>
-        </div>
-        <div id="queue-list" class="queue-list"></div>
+          <!-- Selected clip card -->
+          <div id="selected-clip-card" class="selected-clip-card hidden">
+            <div class="sel-clip-info">
+              <span id="sel-source-tag" class="source-tag"></span>
+              <span id="sel-score-badge" class="score-badge"></span>
+              <span id="sel-timestamp" class="sel-ts"></span>
+              <span id="sel-duration" class="sel-dur"></span>
+            </div>
+            <div id="sel-visual" class="sel-visual"></div>
+            <button class="btn btn-sm btn-secondary" id="change-clip-btn" onclick="switchTab('library')">Change clip</button>
+            <button class="btn btn-sm btn-secondary" id="preview-clip-btn" onclick="previewSelectedClip()" disabled>▶ Preview</button>
+          </div>
+          <div id="no-clip-notice" class="no-clip-notice">
+            👈 Go to <strong>Library</strong> and click a clip to select it
+          </div>
 
-        <div class="panel-header" style="margin-top:8px">
-          <span>Published</span>
-          <span id="daily-tracker" class="badge badge-green">0/2 today</span>
+          <!-- MEME fields -->
+          <div id="fields-meme" class="compose-fields">
+            <div class="field-group">
+              <label>Caption <span class="hint">(burned into video)</span></label>
+              <textarea id="meme-caption" rows="3" placeholder="When your PM adds one more thing to the sprint…"></textarea>
+            </div>
+          </div>
+
+          <!-- NARRATION fields -->
+          <div id="fields-narration" class="compose-fields hidden">
+            <div class="field-group">
+              <label>Hook caption</label>
+              <textarea id="narr-caption" rows="2" placeholder="Caption for the hook clip…"></textarea>
+            </div>
+            <div class="field-group">
+              <label>Narration script <span class="hint" id="narr-word-count"></span></label>
+              <textarea id="narr-script" rows="6" placeholder="Write your body narration here (aim for 15–25 seconds of speech)…" oninput="updateWordCount()"></textarea>
+            </div>
+            <div class="tts-row">
+              <div class="field-group">
+                <label>Voice</label>
+                <select id="voice-select" onchange="syncProvider()">
+                  <optgroup label="OpenAI">
+                    <option value="shimmer">shimmer</option>
+                    <option value="alloy">alloy</option>
+                    <option value="echo">echo</option>
+                    <option value="nova">nova</option>
+                    <option value="fable">fable</option>
+                    <option value="onyx">onyx</option>
+                  </optgroup>
+                  <optgroup label="ElevenLabs">
+                    <option value="Rachel">Rachel</option>
+                    <option value="Bella">Bella</option>
+                    <option value="Adam">Adam</option>
+                  </optgroup>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="tts-btn" onclick="generateTTS()" style="align-self:flex-end">🎤 Generate Voice</button>
+            </div>
+            <div id="audio-preview" class="audio-preview hidden"></div>
+            <div class="field-group">
+              <label>CTA tagline</label>
+              <input type="text" id="narr-cta-tagline" value="Try CrowdListen now"/>
+            </div>
+            <div class="field-group">
+              <label>CTA subtitle</label>
+              <input type="text" id="narr-cta-subtitle" value="the PM for AI Agents"/>
+            </div>
+          </div>
+
+          <!-- CTA ONLY fields -->
+          <div id="fields-cta_only" class="compose-fields hidden">
+            <div class="cta-preview-card">
+              <div class="cta-prev-logo">CRD</div>
+              <div class="cta-prev-tagline" id="cta-prev-tagline">Try CrowdListen now</div>
+              <div class="cta-prev-subtitle" id="cta-prev-subtitle">the PM for AI Agents</div>
+              <div class="cta-prev-url">crowdlisten.com</div>
+            </div>
+            <div class="field-group">
+              <label>Tagline</label>
+              <input type="text" id="cta-tagline-input" value="Try CrowdListen now" oninput="updateCtaPreview()"/>
+            </div>
+            <div class="field-group">
+              <label>Subtitle</label>
+              <input type="text" id="cta-subtitle-input" value="the PM for AI Agents" oninput="updateCtaPreview()"/>
+            </div>
+            <div class="field-group">
+              <label>Duration</label>
+              <select id="cta-duration">
+                <option value="5">5 seconds</option>
+                <option value="8" selected>8 seconds</option>
+                <option value="10">10 seconds</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Output + Render -->
+          <div class="render-bar">
+            <div class="field-group" style="flex:1">
+              <label>Output filename</label>
+              <input type="text" id="output-name" placeholder="my_video_name"/>
+            </div>
+            <button class="btn btn-primary btn-render" id="render-btn" onclick="submitRender()">
+              🚀 Add to Queue
+            </button>
+          </div>
+
         </div>
-        <div id="published-list" class="published-list"></div>
-      </aside>
+      </div>
+
+      <!-- REVIEW -->
+      <div id="tab-review" class="tab-page">
+        <div id="review-grid" class="review-grid">
+          <div class="empty-state">No videos awaiting review</div>
+        </div>
+      </div>
+
+      <!-- PUBLISHED -->
+      <div id="tab-published" class="tab-page">
+        <div class="published-header">
+          <span id="daily-tracker-text">0 / 2 published today</span>
+          <div id="daily-dots" class="daily-dots"></div>
+        </div>
+        <div id="published-grid" class="published-grid">
+          <div class="empty-state">No published videos yet</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tasks side panel -->
+    <aside id="tasks-panel">
+      <div class="tasks-header">
+        Live Tasks
+        <span id="active-task-count" class="badge">0</span>
+      </div>
+      <div id="tasks-list" class="tasks-list">
+        <div class="empty-state" style="padding:16px;font-size:12px">No active tasks</div>
+      </div>
+      <div class="queue-section-header">Queue</div>
+      <div id="queue-list" class="queue-list"></div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Video modal -->
+<div id="video-modal" class="modal hidden">
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-inner">
+    <button class="modal-close" id="modal-close">✕</button>
+    <video id="modal-video" controls autoplay playsinline></video>
+    <div id="modal-actions" class="modal-actions hidden">
+      <button class="btn btn-success" id="modal-approve">✓ Approve & Publish</button>
+      <button class="btn btn-danger" id="modal-reject">✕ Reject</button>
     </div>
   </div>
+</div>
 
-  <!-- Video preview modal -->
-  <div id="video-modal" class="modal hidden">
-    <div class="modal-backdrop" id="modal-backdrop"></div>
-    <div class="modal-content">
-      <button class="modal-close" id="modal-close">✕</button>
-      <video id="modal-video" controls autoplay playsinline></video>
-    </div>
-  </div>
+<!-- Toast container -->
+<div id="toast-container"></div>
 
-  <!-- Toast container -->
-  <div id="toast-container"></div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
