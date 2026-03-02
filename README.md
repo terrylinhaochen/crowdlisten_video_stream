@@ -124,6 +124,24 @@ Two modes: **Meme Clip** (caption overlay + branded CTA) or **Narration + CTA** 
 
 Caption auto-filled from Gemini's analysis. Edit, rename, hit Render → clip lands in the Queue tab for review.
 
+
+### Scheduler — triage and publishing flow
+
+In **Published**, the UI is now a scheduler with three vertically stacked sections:
+
+1. **Newly Generated** — fresh outputs waiting for review
+2. **To Be Published** — scheduled assets (grouped by date label, e.g. Today/Tomorrow)
+3. **Archived** — hidden from active publishing queue
+
+Each scheduled item is shown one-per-line with:
+- filename
+- batch folder
+- size
+- schedule date
+- actions: **Archive** / **Delete** (and date edit inline)
+
+Use **Refresh Scheduler** to reload state from disk/API.
+
 ---
 
 ## Folder Structure
