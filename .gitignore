@@ -1,17 +1,26 @@
-processing/*.mp3
-processing/*.wav
-studio/tmp/
-studio/review/
 __pycache__/
 *.pyc
 .DS_Store
 .env
 
-# Large video files
+# Large/local media outputs
 marketing_clips/*.mp4
 reels_output/
 published/
-
-# Large audio/analysis files
 processing/*.mp3
 processing/*.wav
+processing/office_chunks/
+
+# Studio runtime/generated folders
+studio/tmp/
+studio/uploads/
+studio/review/
+studio/published/
+studio/inbox/
+studio/library/
+
+# Content generation local outputs/workdirs
+content_gen/processing/
+content_gen/sources/
+content_gen/*_zh/
+content_gen/*-zh/
